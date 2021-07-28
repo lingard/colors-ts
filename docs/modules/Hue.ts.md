@@ -15,7 +15,6 @@ Added in v0.1.0
 - [utils](#utils)
   - [Hue (type alias)](#hue-type-alias)
   - [clipHue](#cliphue)
-  - [modPos](#modpos)
 
 ---
 
@@ -39,18 +38,6 @@ Assert that the hue angle is in the interval [0, 360].
 
 ```ts
 export declare const clipHue: (hue: Hue) => Hue
-```
-
-Added in v0.1.0
-
-## modPos
-
-Like `%`, but always positive.
-
-**Signature**
-
-```ts
-export declare const modPos: (x: number) => (y: number) => number
 ```
 
 Added in v0.1.0
