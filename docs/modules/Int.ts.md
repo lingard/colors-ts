@@ -96,11 +96,11 @@ export declare const fromStringAs: (r: Radix) => (s: string) => O.Option<Radix>
 **Example**
 
 ```ts
-import { fromStringAs, hexadecimal } from 'fp-ts-colors/Int'
+import * as Int from 'fp-ts-colors/Int'
 
 const s = ''
 
-fromStringAs(hexadecimal)(s)
+Int.fromStringAs(Int.hexadecimal)(s)
 ```
 
 Added in v0.1.0

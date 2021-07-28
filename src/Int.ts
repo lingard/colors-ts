@@ -52,11 +52,11 @@ export const radix = (n: Int): O.Option<Radix> =>
  *
  * @example
  *
- * import { fromStringAs, hexadecimal } from 'fp-ts-colors/Int'
+ * import * as Int from 'fp-ts-colors/Int'
  *
  * const s = ''
  *
- * fromStringAs(hexadecimal)(s)
+ * Int.fromStringAs(Int.hexadecimal)(s)
  *
  * @since 0.1.0
  */

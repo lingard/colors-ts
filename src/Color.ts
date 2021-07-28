@@ -13,17 +13,20 @@ import { clipHue, Hue, modPos } from './Hue'
 import * as Int from './Int'
 import { sequenceT } from 'fp-ts/Apply'
 
-/**
- * utils
- */
 const clampNumber = Ord.clamp(number.Ord)
 const maxNumber = Ord.max(number.Ord)
 const minNumber = Ord.min(number.Ord)
 
-const clampRatio = clampNumber(0, 1)
-const clampChannel = clampNumber(0, 255)
+const clamp1 = clampNumber(0, 1)
+const clamp255 = clampNumber(0, 255)
 
-const div = (a: number) => (b: number) => a / b
+const channelRatio = (x: number) => x / 255
+
+const clampRGB = (r: number, g: number, b: number) => [
+  clamp255(r),
+  clamp255(g),
+  clamp255(b)
+]
 
 /**
  * @category model
@@ -31,61 +34,49 @@ const div = (a: number) => (b: number) => a / b
  */
 export type Color = readonly [Hue, number, number, number]
 
-// export type Color = Newtype<
-//   { readonly Color: unique symbol },
-//   readonly [Hue, number, number, number]
-// >
-
 /**
  * @category constructors
  */
 
 /**
- * @category constructors
- * @since 0.1.0
- *
  * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
  * Hue is given in degrees, as a `Number` between 0.0 and 360.0. Saturation,
  * Lightness and Alpha are numbers between 0.0 and 1.0.
+ *
+ * @category constructors
+ * @since 0.1.0
  */
 export const hsla = (h: number, s: number, l: number, a: number): Color => [
   h,
-  clampRatio(s),
-  clampRatio(l),
-  clampRatio(a)
+  clamp1(s),
+  clamp1(l),
+  clamp1(a)
 ]
+
+/**
+ * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
+ * Hue is given in degrees, as a `Number` between 0.0 and 360.0. Saturation,
+ * Lightness and Alpha are numbers between 0.0 and 1.0.
+ *
+ * @category constructors
+ * @since 0.1.0
+ */
+export const hsl = (h: number, s: number, l: number): Color => hsla(h, s, l, 1)
 
 /**
  * @category constructors
  * @since 0.1.0
- *
- * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
- * Hue is given in degrees, as a `Number` between 0.0 and 360.0. Saturation,
- * Lightness and Alpha are numbers between 0.0 and 1.0.
- */
-export const hsl = (h: number, s: number, l: number): Color => hsla(h, s, l, 1)
-
-const toChannel = (x: number) => div(x)(255)
-
-const clampChannels = (r: number, g: number, b: number) => [
-  clampChannel(r),
-  clampChannel(g),
-  clampChannel(b)
-]
-
-/**
- * @since 0.1.0
  */
 export const rgba = (r: number, g: number, b: number, alpha: number): Color => {
-  const [red, green, blue] = clampChannels(r, g, b)
+  const [red, green, blue] = clampRGB(r, g, b)
   const maxChroma = maxNumber(maxNumber(red, green), blue)
   const minChroma = minNumber(minNumber(red, green), blue)
   const chroma = maxChroma - minChroma
 
   const getHue = () => {
-    const r = toChannel(red)
-    const g = toChannel(green)
-    const b = toChannel(blue)
+    const r = channelRatio(red)
+    const g = channelRatio(green)
+    const b = channelRatio(blue)
     const c = chroma / 255
 
     if (c === 0) {
@@ -122,6 +113,7 @@ export const rgba = (r: number, g: number, b: number, alpha: number): Color => {
 }
 
 /**
+ * @category constructors
  * @since 0.1.0
  */
 export const rgb = (r: number, g: number, b: number): Color => rgba(r, g, b, 1)
@@ -131,6 +123,7 @@ export const rgb = (r: number, g: number, b: number): Color => rgba(r, g, b, 1)
  * Hue is given in degrees, as a `Number` between 0.0 and 360.0. Saturation,
  * Value and Alpha are numbers between 0.0 and 1.0.
  *
+ * @category deconstructors
  * @since 0.1.0
  */
 export const hsva = (h: number, s: number, v: number, a: number): Color =>
@@ -148,6 +141,7 @@ export const hsva = (h: number, s: number, v: number, a: number): Color =>
  * given in degrees, as a `Number` between 0.0 and 360.0. Both Saturation and
  * Value are numbers between 0.0 and 1.0.
  *
+ * @category deconstructors
  * @since 0.1.0
  */
 export const hsv = (h: number, s: number, v: number): Color => hsva(h, s, v, 1)
@@ -160,6 +154,7 @@ const strMatch = (pattern: RegExp) => (str: string) =>
  * character is required. Each hexadecimal digit is of the form `[0-9a-fA-F]`
  * (case insensitive). Returns `Nothing` if the string is in a wrong format.
  *
+ * @category deconstructors
  * @since 0.1.0
  */
 export const fromHexString: (hex: string) => O.Option<Color> = (str) => {
@@ -196,6 +191,7 @@ export const fromHexString: (hex: string) => O.Option<Color> = (str) => {
 /**
  * Pure black.
  *
+ * @category constructors
  * @since 0.1.0
  */
 export const black = hsl(0.0, 0.0, 0.0)
@@ -203,6 +199,7 @@ export const black = hsl(0.0, 0.0, 0.0)
 /**
  * Pure white.
  *
+ * @category constructors
  * @since 0.1.0
  */
 export const white = hsl(0.0, 0.0, 1.0)
@@ -213,6 +210,7 @@ export const white = hsl(0.0, 0.0, 1.0)
  * between 0.0 and 1.0.
  *
  * @since 0.1.0
+ * @category deconstructors
  */
 export const toRGBA2: (c: Color) => {
   r: number
@@ -232,6 +230,7 @@ export const toRGBA2: (c: Color) => {
  * are numbers in the range from 0.0 to 1.0.
  *
  * @since 0.1.0
+ * @category deconstructors
  */
 export const toRGBA: (c: Color) => {
   r: number
@@ -275,6 +274,7 @@ export const toRGBA: (c: Color) => {
 
 /**
  * @since 0.1.0
+ * @category deconstructors
  */
 export const toHexString: (c: Color) => string = (color) => {
   const c = toRGBA2(color)
