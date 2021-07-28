@@ -14,15 +14,15 @@ Added in v0.1.0
 
 - [constructors](#constructors)
   - [black](#black)
+  - [fromHexString](#fromhexstring)
   - [hsl](#hsl)
   - [hsla](#hsla)
+  - [hsv](#hsv)
+  - [hsva](#hsva)
   - [rgb](#rgb)
   - [rgba](#rgba)
   - [white](#white)
 - [deconstructors](#deconstructors)
-  - [fromHexString](#fromhexstring)
-  - [hsv](#hsv)
-  - [hsva](#hsva)
   - [toHexString](#tohexstring)
   - [toRGBA](#torgba)
   - [toRGBA2](#torgba2)
@@ -51,6 +51,20 @@ export declare const black: Color
 
 Added in v0.1.0
 
+## fromHexString
+
+Parse a hexadecimal RGB code of the form `#rgb` or `#rrggbb`. The `#`
+character is required. Each hexadecimal digit is of the form `[0-9a-fA-F]`
+(case insensitive). Returns `Nothing` if the string is in a wrong format.
+
+**Signature**
+
+```ts
+export declare const fromHexString: (hex: string) => O.Option<Color>
+```
+
+Added in v0.1.0
+
 ## hsl
 
 Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
@@ -75,6 +89,34 @@ Lightness and Alpha are numbers between 0.0 and 1.0.
 
 ```ts
 export declare const hsla: (h: number, s: number, l: number, a: number) => Color
+```
+
+Added in v0.1.0
+
+## hsv
+
+Create a `Color` from Hue, Saturation and Value values. The Hue is
+given in degrees, as a `Number` between 0.0 and 360.0. Both Saturation and
+Value are numbers between 0.0 and 1.0.
+
+**Signature**
+
+```ts
+export declare const hsv: (h: number, s: number, v: number) => Color
+```
+
+Added in v0.1.0
+
+## hsva
+
+Create a `Color` from Hue, Saturation, Value and Alpha values. The
+Hue is given in degrees, as a `Number` between 0.0 and 360.0. Saturation,
+Value and Alpha are numbers between 0.0 and 1.0.
+
+**Signature**
+
+```ts
+export declare const hsva: (h: number, s: number, v: number, a: number) => Color
 ```
 
 Added in v0.1.0
@@ -112,48 +154,6 @@ export declare const white: Color
 Added in v0.1.0
 
 # deconstructors
-
-## fromHexString
-
-Parse a hexadecimal RGB code of the form `#rgb` or `#rrggbb`. The `#`
-character is required. Each hexadecimal digit is of the form `[0-9a-fA-F]`
-(case insensitive). Returns `Nothing` if the string is in a wrong format.
-
-**Signature**
-
-```ts
-export declare const fromHexString: (hex: string) => O.Option<Color>
-```
-
-Added in v0.1.0
-
-## hsv
-
-Create a `Color` from Hue, Saturation and Value values. The Hue is
-given in degrees, as a `Number` between 0.0 and 360.0. Both Saturation and
-Value are numbers between 0.0 and 1.0.
-
-**Signature**
-
-```ts
-export declare const hsv: (h: number, s: number, v: number) => Color
-```
-
-Added in v0.1.0
-
-## hsva
-
-Create a `Color` from Hue, Saturation, Value and Alpha values. The
-Hue is given in degrees, as a `Number` between 0.0 and 360.0. Saturation,
-Value and Alpha are numbers between 0.0 and 1.0.
-
-**Signature**
-
-```ts
-export declare const hsva: (h: number, s: number, v: number, a: number) => Color
-```
-
-Added in v0.1.0
 
 ## toHexString
 

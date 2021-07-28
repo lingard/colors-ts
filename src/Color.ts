@@ -35,10 +35,6 @@ const clampRGB = (r: number, g: number, b: number) => [
 export type Color = readonly [Hue, number, number, number]
 
 /**
- * @category constructors
- */
-
-/**
  * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
  * Hue is given in degrees, as a `Number` between 0.0 and 360.0. Saturation,
  * Lightness and Alpha are numbers between 0.0 and 1.0.
@@ -123,7 +119,7 @@ export const rgb = (r: number, g: number, b: number): Color => rgba(r, g, b, 1)
  * Hue is given in degrees, as a `Number` between 0.0 and 360.0. Saturation,
  * Value and Alpha are numbers between 0.0 and 1.0.
  *
- * @category deconstructors
+ * @category constructors
  * @since 0.1.0
  */
 export const hsva = (h: number, s: number, v: number, a: number): Color =>
@@ -141,7 +137,7 @@ export const hsva = (h: number, s: number, v: number, a: number): Color =>
  * given in degrees, as a `Number` between 0.0 and 360.0. Both Saturation and
  * Value are numbers between 0.0 and 1.0.
  *
- * @category deconstructors
+ * @category constructors
  * @since 0.1.0
  */
 export const hsv = (h: number, s: number, v: number): Color => hsva(h, s, v, 1)
@@ -154,7 +150,7 @@ const strMatch = (pattern: RegExp) => (str: string) =>
  * character is required. Each hexadecimal digit is of the form `[0-9a-fA-F]`
  * (case insensitive). Returns `Nothing` if the string is in a wrong format.
  *
- * @category deconstructors
+ * @category constructors
  * @since 0.1.0
  */
 export const fromHexString: (hex: string) => O.Option<Color> = (str) => {
