@@ -252,6 +252,10 @@ describe('Color', () => {
     })
   })
 
+  test('mix', () => {
+    expect(C.mix('rgb')(red)(blue)(0.5)).toEqualColor(C.fromInt(0x800080))
+  })
+
   test('mixRGB', () => {
     expect(C.mixRGB(red)(blue)(0.5)).toEqualColor(C.fromInt(0x800080))
   })

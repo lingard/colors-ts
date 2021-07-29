@@ -687,71 +687,82 @@ export const toGray: Endomorphism<Color> = (c) =>
 type Interpolator = (start: Color) => (end: Color) => (ratio: number) => Color
 
 /**
- * Mix two colors by linearly interpolating between them in the  HSL colorspace.
- * The shortest path is chosen along the circle of hue values.
- *
  * @since 0.1.0
  */
-export const mixHSL: Interpolator = (c1) => (c2) => (ratio) => {
-  const f = toHSLA(c1)
-  const t = toHSLA(c2)
-
-  return hsla(
-    interpolateAngle(ratio)(f.h)(t.h),
-    interpolate(ratio)(f.s)(t.s),
-    interpolate(ratio)(f.l)(t.l),
-    interpolate(ratio)(f.a)(t.a)
-  )
-}
+export type ColorSpace = 'rgb' | 'hsl' | 'LCh' | 'Lab'
 
 /**
  * Mix two colors by linearly interpolating between them in the RGB color space.
  *
  * @since 0.1.0
  */
-export const mixRGB: Interpolator = (c1) => (c2) => (ratio) => {
-  const f = toRGBA2(c1)
-  const t = toRGBA2(c2)
+export const mix =
+  (space: ColorSpace): Interpolator =>
+  (c1) =>
+  (c2) =>
+  (ratio) => {
+    const i = interpolate(ratio)
+    const ia = interpolateAngle(ratio)
 
-  return rgba(
-    interpolate(ratio)(f.r)(t.r),
-    interpolate(ratio)(f.g)(t.g),
-    interpolate(ratio)(f.b)(t.b),
-    interpolate(ratio)(f.a)(t.a)
-  )
-}
+    switch (space) {
+      case 'hsl': {
+        const f = toHSLA(c1)
+        const t = toHSLA(c2)
+
+        return hsla(ia(f.h)(t.h), i(f.s)(t.s), i(f.l)(t.l), i(f.a)(t.a))
+      }
+
+      case 'rgb': {
+        const f = toRGBA2(c1)
+        const t = toRGBA2(c2)
+
+        return rgba(i(f.r)(t.r), i(f.g)(t.g), i(f.b)(t.b), i(f.a)(t.a))
+      }
+
+      case 'LCh': {
+        const f = toLCh(c1)
+        const t = toLCh(c2)
+
+        return lch(i(f.l)(t.l), i(f.c)(t.c), ia(f.h)(t.h))
+      }
+
+      case 'Lab': {
+        const f = toLab(c1)
+        const t = toLab(c2)
+
+        return lab(i(f.l)(t.l), i(f.a)(t.a), i(f.b)(t.b))
+      }
+    }
+  }
+
+/**
+ * Mix two colors by linearly interpolating between them in the  HSL colorspace.
+ * The shortest path is chosen along the circle of hue values.
+ *
+ * @since 0.1.0
+ */
+export const mixHSL: Interpolator = mix('hsl')
+
+/**
+ * Mix two colors by linearly interpolating between them in the RGB color space.
+ *
+ * @since 0.1.0
+ */
+export const mixRGB: Interpolator = mix('rgb')
 
 /**
  * Mix two colors by linearly interpolating between them in the LCh color space.
  *
  * @since 0.1.0
  */
-export const mixLCh: Interpolator = (c1) => (c2) => (ratio) => {
-  const f = toLCh(c1)
-  const t = toLCh(c2)
-
-  return lch(
-    interpolate(ratio)(f.l)(t.l),
-    interpolate(ratio)(f.c)(t.c),
-    interpolateAngle(ratio)(f.h)(t.h)
-  )
-}
+export const mixLCh: Interpolator = mix('LCh')
 
 /**
  * Mix two colors by linearly interpolating between them in the Lab color space.
  *
  * @since 0.1.0
  */
-export const mixLab: Interpolator = (c1) => (c2) => (ratio) => {
-  const f = toLab(c1)
-  const t = toLab(c2)
-
-  return lab(
-    interpolate(ratio)(f.l)(t.l),
-    interpolate(ratio)(f.a)(t.a),
-    interpolate(ratio)(f.b)(t.b)
-  )
-}
+export const mixLab: Interpolator = mix('Lab')
 
 /**
  * The percieved brightness of the color (A number between 0.0 and 1.0).
