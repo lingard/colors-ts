@@ -312,7 +312,7 @@ export const fromHexString: (hex: string) => O.Option<Color> = (str) => {
   )
 }
 
-const clampBit = clampNumber(0, 0xff0000)
+const clampInt = clampNumber(0, 0xff0000)
 
 const shr =
   (a: number) =>
@@ -335,7 +335,7 @@ const shr =
  * @since 0.1.0
  */
 export const fromInt = (i: number): Color => {
-  const n = clampBit(i)
+  const n = clampInt(i)
   const r = shr(n)(16) & 0xff
   const g = shr(n)(8) & 0xff
   const b = n & 0xff
