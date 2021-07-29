@@ -46,13 +46,22 @@ Added in v0.1.0
 - [model](#model)
   - [Color (type alias)](#color-type-alias)
 - [utils](#utils)
+  - [brightness](#brightness)
   - [complementary](#complementary)
+  - [contrast](#contrast)
   - [darken](#darken)
   - [desaturate](#desaturate)
+  - [isLight](#islight)
+  - [isReadable](#isreadable)
   - [lighten](#lighten)
   - [luminance](#luminance)
+  - [mixHSL](#mixhsl)
+  - [mixLCh](#mixlch)
+  - [mixLab](#mixlab)
+  - [mixRGB](#mixrgb)
   - [rotateHue](#rotatehue)
   - [saturate](#saturate)
+  - [textColor](#textcolor)
   - [toGray](#togray)
 
 ---
@@ -211,6 +220,9 @@ Added in v0.1.0
 
 ## rgba
 
+Create a `Color` from integer RGB values between 0 and 255 and a floating
+point alpha value between 0.0 and 1.0.
+
 **Signature**
 
 ```ts
@@ -355,8 +367,9 @@ Added in v0.1.0
 
 ## toRGBA
 
-Convert a `Color` to its red, green, blue and alpha values. All values
-are numbers in the range from 0.0 to 1.0.
+Convert a `Color` to its red, green, blue and alpha values. The RGB values
+are integers in the range from 0 to 255. The alpha channel is a number
+between 0.0 and 1.0.
 
 **Signature**
 
@@ -368,9 +381,8 @@ Added in v0.1.0
 
 ## toRGBA2
 
-Convert a `Color` to its red, green, blue and alpha values. The RGB values
-are integers in the range from 0 to 255. The alpha channel is a number
-between 0.0 and 1.0.
+Convert a `Color` to its red, green, blue and alpha values. All values
+are numbers in the range from 0.0 to 1.0.
 
 **Signature**
 
@@ -413,8 +425,6 @@ Added in v0.1.0
   values. This is different from comparing the HSL values (for example,
   HSL has many different representations of black (arbitrary hue and
   saturation values).
-- Colors outside the sRGB gamut which cannot be displayed on a typical
-  computer screen can not be represented by `Color`.
 
 ## OrdLuminance
 
@@ -440,6 +450,11 @@ Added in v0.1.0
 
 ## Color (type alias)
 
+Note:
+
+- Colors outside the sRGB gamut which cannot be displayed on a typical
+  computer screen can not be represented by `Color`.
+
 **Signature**
 
 ```ts
@@ -450,6 +465,19 @@ Added in v0.1.0
 
 # utils
 
+## brightness
+
+The percieved brightness of the color (A number between 0.0 and 1.0).
+See: https://www.w3.org/TR/AERT#color-contrast
+
+**Signature**
+
+```ts
+export declare const brightness: (c: Color) => number
+```
+
+Added in v0.1.0
+
 ## complementary
 
 Get the complementary color (hue rotated by 180°).
@@ -458,6 +486,23 @@ Get the complementary color (hue rotated by 180°).
 
 ```ts
 export declare const complementary: ([h, s, l, a]: Color) => Color
+```
+
+Added in v0.1.0
+
+## contrast
+
+The contrast ratio of two colors. A minimum contrast ratio of 4.5 is
+recommended to ensure that text is readable on a colored background. The
+contrast ratio is symmetric on both arguments:
+`contrast c1 c2 == contrast c2 c1`.
+
+See http://www.w3.org/TR/2008/REC-WCAG20-20081211/#contrast-ratiodef
+
+**Signature**
+
+```ts
+export declare const contrast: (c1: Color) => (c2: Color) => number
 ```
 
 Added in v0.1.0
@@ -490,6 +535,32 @@ export declare const desaturate: (f: number) => Endomorphism<Color>
 
 Added in v0.1.0
 
+## isLight
+
+Determine whether a color is perceived as a light color.
+
+**Signature**
+
+```ts
+export declare const isLight: (c: Color) => boolean
+```
+
+Added in v0.1.0
+
+## isReadable
+
+Determine whether text of one color is readable on a background of a
+different color (see `contrast`). This function is symmetric in both
+arguments.
+
+**Signature**
+
+```ts
+export declare const isReadable: (c1: Color) => (c2: Color) => boolean
+```
+
+Added in v0.1.0
+
 ## lighten
 
 Lighten a color by adding a certain amount (number between -1.0 and 1.0)
@@ -506,10 +577,64 @@ Added in v0.1.0
 
 ## luminance
 
+The relative brightness of a color (normalized to 0.0 for darkest black
+and 1.0 for lightest white), according to the WCAG definition.
+
+See: https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
+
 **Signature**
 
 ```ts
 export declare const luminance: (color: Color) => number
+```
+
+Added in v0.1.0
+
+## mixHSL
+
+Mix two colors by linearly interpolating between them in the HSL colorspace.
+The shortest path is chosen along the circle of hue values.
+
+**Signature**
+
+```ts
+export declare const mixHSL: Interpolator
+```
+
+Added in v0.1.0
+
+## mixLCh
+
+Mix two colors by linearly interpolating between them in the LCh color space.
+
+**Signature**
+
+```ts
+export declare const mixLCh: Interpolator
+```
+
+Added in v0.1.0
+
+## mixLab
+
+Mix two colors by linearly interpolating between them in the Lab color space.
+
+**Signature**
+
+```ts
+export declare const mixLab: Interpolator
+```
+
+Added in v0.1.0
+
+## mixRGB
+
+Mix two colors by linearly interpolating between them in the RGB color space.
+
+**Signature**
+
+```ts
+export declare const mixRGB: Interpolator
 ```
 
 Added in v0.1.0
@@ -536,6 +661,19 @@ negative, the color is desaturated.
 
 ```ts
 export declare const saturate: (f: number) => ([h, s, l, a]: Color) => Color
+```
+
+Added in v0.1.0
+
+## textColor
+
+Return a readable foreground text color (either `black` or `white`) for a
+given background color.
+
+**Signature**
+
+```ts
+export declare const textColor: (c: Color) => Color
 ```
 
 Added in v0.1.0

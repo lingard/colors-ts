@@ -21,8 +21,8 @@ const almostEqual = (expected: C.Color, actual: C.Color) => {
   const check = (c1: C.Color, c2: C.Color) =>
     pipe(
       {
-        c1: C.toRGBA2(c1),
-        c2: C.toRGBA2(c2)
+        c1: C.toRGBA(c1),
+        c2: C.toRGBA(c2)
       },
       ({ c1, c2 }) => aE(c1.r, c2.r) && aE(c1.g, c2.g) && aE(c1.b, c2.b)
     )
@@ -130,7 +130,7 @@ describe('Color', () => {
   test('rgb / toRGB (HSL -> RGB -> HSL)', () => {
     const hslRoundtrip = (h: number, s: number, l: number) => {
       const c1 = C.hsl(h, s, l)
-      const c2 = pipe(C.toRGBA2(c1), ({ r, g, b, a }) => C.rgba(r, g, b, a))
+      const c2 = pipe(C.toRGBA(c1), ({ r, g, b, a }) => C.rgba(r, g, b, a))
 
       return C.Eq.equals(c1, c2)
     }

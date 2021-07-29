@@ -12,7 +12,7 @@ import { Endomorphism, pipe } from 'fp-ts/function'
 import { clipHue, Hue } from './Hue'
 import * as Int from './Int'
 import { sequenceT } from 'fp-ts/Apply'
-import { deg2rad, modPos, rad2deg } from './Math'
+import { deg2rad, interpolate, interpolateAngle, modPos, rad2deg } from './Math'
 
 /**
  * @category internal
@@ -36,6 +36,10 @@ const strMatch = (pattern: RegExp) => (str: string) =>
   O.fromNullable(str.match(pattern))
 
 /**
+ * Note:
+ * - Colors outside the sRGB gamut which cannot be displayed on a typical
+ *   computer screen can not be represented by `Color`.
+ *
  * @category model
  * @since 0.1.0
  */
@@ -67,6 +71,9 @@ export const hsla = (h: number, s: number, l: number, a: number): Color => [
 export const hsl = (h: number, s: number, l: number): Color => hsla(h, s, l, 1)
 
 /**
+ * Create a `Color` from integer RGB values between 0 and 255 and a floating
+ * point alpha value between 0.0 and 1.0.
+ *
  * @category constructors
  * @since 0.1.0
  */
@@ -319,7 +326,7 @@ export const graytone = (l: number): Color => hsl(0.0, 0.0, l)
  * @since 0.1.0
  * @category deconstructors
  */
-export const toRGBA: (c: Color) => {
+export const toRGBA2: (c: Color) => {
   r: number
   g: number
   b: number
@@ -367,13 +374,13 @@ export const toRGBA: (c: Color) => {
  * @since 0.1.0
  * @category deconstructors
  */
-export const toRGBA2: (c: Color) => {
+export const toRGBA: (c: Color) => {
   r: number
   g: number
   b: number
   a: number
 } = (c) =>
-  pipe(toRGBA(c), (c) => ({
+  pipe(toRGBA2(c), (c) => ({
     r: Math.round(255 * c.r),
     g: Math.round(255 * c.g),
     b: Math.round(255 * c.b),
@@ -518,7 +525,7 @@ export const toLCh = (c: Color): { l: number; c: number; h: number } => {
  * @category deconstructors
  */
 export const toHexString: (c: Color) => string = (color) => {
-  const c = toRGBA2(color)
+  const c = toRGBA(color)
   const toHex = (n: number) => {
     const repr = Int.toStringAs(Int.hexadecimal)(n)
 
@@ -629,10 +636,98 @@ export const toGray: Endomorphism<Color> = (c) =>
   pipe(toLCh(c), (c) => lch(c.l, 0.0, 0.0), desaturate(1))
 
 /**
+ * A function that interpolates between two colors. It takes a start color,
+ * an end color, and a ratio in the interval [0.0, 1.0]. It returns the
+ * mixed color.
+ */
+type Interpolator = (start: Color) => (end: Color) => (ratio: number) => Color
+
+/**
+ * Mix two colors by linearly interpolating between them in the  HSL colorspace.
+ * The shortest path is chosen along the circle of hue values.
+ *
+ * @since 0.1.0
+ */
+export const mixHSL: Interpolator = (c1) => (c2) => (ratio) => {
+  const f = toHSLA(c1)
+  const t = toHSLA(c2)
+
+  return hsla(
+    interpolateAngle(ratio)(f.h)(t.h),
+    interpolate(ratio)(f.s)(t.s),
+    interpolate(ratio)(f.l)(t.l),
+    interpolate(ratio)(f.a)(t.a)
+  )
+}
+
+/**
+ * Mix two colors by linearly interpolating between them in the RGB color space.
+ *
+ * @since 0.1.0
+ */
+export const mixRGB: Interpolator = (c1) => (c2) => (ratio) => {
+  const f = toRGBA2(c1)
+  const t = toRGBA2(c2)
+
+  return rgba(
+    interpolate(ratio)(f.r)(t.r),
+    interpolate(ratio)(f.g)(t.g),
+    interpolate(ratio)(f.b)(t.b),
+    interpolate(ratio)(f.a)(t.a)
+  )
+}
+
+/**
+ * Mix two colors by linearly interpolating between them in the LCh color space.
+ *
+ * @since 0.1.0
+ */
+export const mixLCh: Interpolator = (c1) => (c2) => (ratio) => {
+  const f = toLCh(c1)
+  const t = toLCh(c2)
+
+  return lch(
+    interpolate(ratio)(f.l)(t.l),
+    interpolate(ratio)(f.c)(t.c),
+    interpolateAngle(ratio)(f.h)(t.h)
+  )
+}
+
+/**
+ * Mix two colors by linearly interpolating between them in the Lab color space.
+ *
+ * @since 0.1.0
+ */
+export const mixLab: Interpolator = (c1) => (c2) => (ratio) => {
+  const f = toLab(c1)
+  const t = toLab(c2)
+
+  return lab(
+    interpolate(ratio)(f.l)(t.l),
+    interpolate(ratio)(f.a)(t.a),
+    interpolate(ratio)(f.b)(t.b)
+  )
+}
+
+/**
+ * The percieved brightness of the color (A number between 0.0 and 1.0).
+ * See: https://www.w3.org/TR/AERT#color-contrast
+ *
+ * @since 0.1.0
+ */
+export const brightness = (c: Color): number =>
+  pipe(toRGBA2(c), (c) => (299.0 * c.r + 587.0 * c.g + 114.0 * c.b) / 1000.0)
+
+/**
+ * The relative brightness of a color (normalized to 0.0 for darkest black
+ * and 1.0 for lightest white), according to the WCAG definition.
+ *
+ * See: https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
+ *
  * @since 0.1.0
  */
 export const luminance: (color: Color) => number = (c): number => {
-  const rgba = toRGBA(c)
+  const rgba = toRGBA2(c)
   const f = (c: number) => {
     if (c <= 0.03928) {
       return c / 12.92
@@ -649,6 +744,53 @@ export const luminance: (color: Color) => number = (c): number => {
 }
 
 /**
+ * The contrast ratio of two colors. A minimum contrast ratio of 4.5 is
+ * recommended to ensure that text is readable on a colored background. The
+ * contrast ratio is symmetric on both arguments:
+ * `contrast c1 c2 == contrast c2 c1`.
+ *
+ * See http://www.w3.org/TR/2008/REC-WCAG20-20081211/#contrast-ratiodef
+ *
+ * @since 0.1.0
+ */
+export const contrast =
+  (c1: Color) =>
+  (c2: Color): number => {
+    const l1 = luminance(c1)
+    const l2 = luminance(c2)
+    const o = 0.05
+
+    return l1 > l2 ? (l1 + o) / (l2 + o) : (l2 + o) / (l1 + o)
+  }
+
+/**
+ * Determine whether a color is perceived as a light color.
+ *
+ * @since 0.1.0
+ */
+export const isLight = (c: Color): boolean => brightness(c) > 0.5
+
+/**
+ * Determine whether text of one color is readable on a background of a
+ * different color (see `contrast`). This function is symmetric in both
+ * arguments.
+ *
+ * @since 0.1.0
+ */
+export const isReadable =
+  (c1: Color) =>
+  (c2: Color): boolean =>
+    contrast(c1)(c2) > 4.5
+
+/**
+ * Return a readable foreground text color (either `black` or `white`) for a
+ * given background color.
+ *
+ * @since 0.1.0
+ */
+export const textColor = (c: Color): Color => (isLight(c) ? black : white)
+
+/**
  * @category instances
  * @since 0.1.0
  *
@@ -656,13 +798,11 @@ export const luminance: (color: Color) => number = (c): number => {
  *   values. This is different from comparing the HSL values (for example,
  *   HSL has many different representations of black (arbitrary hue and
  *   saturation values).
- * - Colors outside the sRGB gamut which cannot be displayed on a typical
- *   computer screen can not be represented by `Color`.
  */
 export const Eq: Equals.Eq<Color> = {
   equals: (x, y) => {
-    const cx = toRGBA2(x)
-    const cy = toRGBA2(y)
+    const cx = toRGBA(x)
+    const cy = toRGBA(y)
 
     return cx.r == cy.r && cx.g == cy.g && cx.b == cy.b && cx.a == cy.a
   }
