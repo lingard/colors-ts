@@ -15,6 +15,7 @@ Added in v0.1.0
 - [constructors](#constructors)
   - [black](#black)
   - [fromHexString](#fromhexstring)
+  - [fromInt](#fromint)
   - [graytone](#graytone)
   - [hsl](#hsl)
   - [hsla](#hsla)
@@ -51,6 +52,7 @@ Added in v0.1.0
   - [contrast](#contrast)
   - [darken](#darken)
   - [desaturate](#desaturate)
+  - [distance](#distance)
   - [isLight](#islight)
   - [isReadable](#isreadable)
   - [lighten](#lighten)
@@ -90,6 +92,29 @@ character is required. Each hexadecimal digit is of the form `[0-9a-fA-F]`
 
 ```ts
 export declare const fromHexString: (hex: string) => O.Option<Color>
+```
+
+Added in v0.1.0
+
+## fromInt
+
+Converts an integer to a color (RGB representation). `0` is black and
+`0xffffff` is white. Values outside this range will be clamped.
+
+This function is useful if you want to hard-code Hex values. For example:
+
+**Signature**
+
+```ts
+export declare const fromInt: (i: number) => Color
+```
+
+**Example**
+
+```ts
+import * as C from 'fp-ts-colors/Color'
+
+C.fromInt(0xff0000)
 ```
 
 Added in v0.1.0
@@ -222,6 +247,9 @@ Added in v0.1.0
 
 Create a `Color` from integer RGB values between 0 and 255 and a floating
 point alpha value between 0.0 and 1.0.
+
+RGB to HSL conversion algorithm adapted from
+https://en.wikipedia.org/wiki/HSL_and_HSV
 
 **Signature**
 
@@ -458,7 +486,9 @@ Note:
 **Signature**
 
 ```ts
-export type Color = readonly [Hue, number, number, number]
+export type Color = readonly [unclampedHue: Hue, saturation: number, lightness: number, alpha: number] & {
+  readonly Color: unique symbol
+}
 ```
 
 Added in v0.1.0
@@ -531,6 +561,21 @@ negative, the color is saturated.
 
 ```ts
 export declare const desaturate: (f: number) => Endomorphism<Color>
+```
+
+Added in v0.1.0
+
+## distance
+
+Compute the perceived 'distance' between two colors according to the CIE76
+delta-E standard. A distance below ~2.3 is not noticable.
+
+See: https://en.wikipedia.org/wiki/Color_difference
+
+**Signature**
+
+```ts
+export declare const distance: (a: Color) => (b: Color) => number
 ```
 
 Added in v0.1.0

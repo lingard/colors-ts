@@ -327,9 +327,9 @@ const shr =
  *
  * @example
  *
- * import * as C from 'fp-ts-color/Color'
+ * import * as C from 'fp-ts-colors/Color'
  *
- * red = C.fromInt(0xff0000)
+ * C.fromInt(0xff0000)
  *
  * @category constructors
  * @since 0.1.0
@@ -843,6 +843,8 @@ export const textColor = (c: Color): Color => (isLight(c) ? black : white)
  * delta-E standard. A distance below ~2.3 is not noticable.
  *
  * See: https://en.wikipedia.org/wiki/Color_difference
+ *
+ * @since 0.1.0
  */
 export const distance =
   (a: Color) =>
