@@ -12,7 +12,14 @@ import { Endomorphism, pipe } from 'fp-ts/function'
 import { clipHue, Hue } from './Hue'
 import * as Int from './Int'
 import { sequenceT } from 'fp-ts/Apply'
-import { deg2rad, interpolate, interpolateAngle, modPos, rad2deg } from './Math'
+import {
+  deg2rad,
+  interpolate,
+  interpolateAngle,
+  modPos,
+  rad2deg,
+  square
+} from './Math'
 
 /**
  * @category internal
@@ -43,7 +50,14 @@ const strMatch = (pattern: RegExp) => (str: string) =>
  * @category model
  * @since 0.1.0
  */
-export type Color = readonly [Hue, number, number, number]
+export type Color = readonly [
+  unclampedHue: Hue,
+  saturation: number,
+  lightness: number,
+  alpha: number
+] & {
+  readonly Color: unique symbol
+}
 
 /**
  * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
@@ -53,12 +67,8 @@ export type Color = readonly [Hue, number, number, number]
  * @category constructors
  * @since 0.1.0
  */
-export const hsla = (h: number, s: number, l: number, a: number): Color => [
-  h,
-  clamp1(s),
-  clamp1(l),
-  clamp1(a)
-]
+export const hsla = (h: number, s: number, l: number, a: number): Color =>
+  [h, clamp1(s), clamp1(l), clamp1(a)] as unknown as Color
 
 /**
  * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
@@ -73,6 +83,9 @@ export const hsl = (h: number, s: number, l: number): Color => hsla(h, s, l, 1)
 /**
  * Create a `Color` from integer RGB values between 0 and 255 and a floating
  * point alpha value between 0.0 and 1.0.
+ *
+ * RGB to HSL conversion algorithm adapted from
+ * https://en.wikipedia.org/wiki/HSL_and_HSV
  *
  * @category constructors
  * @since 0.1.0
@@ -119,7 +132,7 @@ export const rgba = (r: number, g: number, b: number, alpha: number): Color => {
 
   const saturation = getSaturation()
 
-  return [hue, saturation, lightness, alpha]
+  return hsla(hue, saturation, lightness, alpha)
 }
 
 /**
@@ -163,11 +176,11 @@ export const hsva = (h: number, s: number, v: number, a: number): Color => {
     lightness: tmp / 2.0
   }))
 
-  if (v === 0) {
+  if (value === 0) {
     return hsla(h, s / (2.0 - s), 0.0, a)
   }
 
-  if (s === 0 && v === 1.0) {
+  if (s === 0 && value === 1.0) {
     return hsla(h, 0.0, 1.0, a)
   }
 
@@ -201,6 +214,10 @@ export const hsv = (h: number, s: number, v: number): Color => hsva(h, s, v, 1)
 export const xyz = (x: number, y: number, z: number): Color => {
   const f = (c: number) =>
     c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1.0 / 2.4) - 0.055
+
+  // r = f ( 3.2406 * x - 1.5372 * y - 0.4986 * z)
+  // g = f (-0.9689 * x + 1.8758 * y + 0.0415 * z)
+  // b = f ( 0.0557 * x - 0.2040 * y + 1.0570 * z)
 
   const r = f(3.2406 * x - 1.5372 * y - 0.4986 * z)
   const g = f(-0.9689 * x + 1.8758 * y + 0.0415 * z)
@@ -293,6 +310,37 @@ export const fromHexString: (hex: string) => O.Option<Color> = (str) => {
       return rgb(r, g, b)
     })
   )
+}
+
+const clampBit = clampNumber(0, 0xff0000)
+
+const shr =
+  (a: number) =>
+  (b: number): number =>
+    a >> b
+
+/**
+ * Converts an integer to a color (RGB representation). `0` is black and
+ * `0xffffff` is white. Values outside this range will be clamped.
+ *
+ * This function is useful if you want to hard-code Hex values. For example:
+ *
+ * @example
+ *
+ * import * as C from 'fp-ts-color/Color'
+ *
+ * red = C.fromInt(0xff0000)
+ *
+ * @category constructors
+ * @since 0.1.0
+ */
+export const fromInt = (i: number): Color => {
+  const n = clampBit(i)
+  const r = shr(n)(16) & 0xff
+  const g = shr(n)(8) & 0xff
+  const b = n & 0xff
+
+  return rgb(r, g, b)
 }
 
 /**
@@ -464,7 +512,7 @@ export const toXYZ = (c: Color): { x: number; y: number; z: number } => {
   const finv = (c: number) =>
     c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
 
-  const rec = toRGBA(c)
+  const rec = toRGBA2(c)
   const r = finv(rec.r)
   const g = finv(rec.g)
   const b = finv(rec.b)
@@ -515,7 +563,7 @@ export const toLCh = (c: Color): { l: number; c: number; h: number } => {
   const a = rec.a
   const b = rec.b
   const c2 = Math.sqrt(a * a + b * b)
-  const h = modPos(Math.atan2(b, a * rad2deg))(360.0)
+  const h = clipHue(Math.atan2(b, a) * rad2deg)
 
   return { l, c: c2, h }
 }
@@ -565,7 +613,7 @@ export const cssStringRGBA = (c: Color): string =>
   pipe(toRGBA(c), (c) =>
     c.a === 1.0
       ? `rgb(${c.r}, ${c.g}, ${c.b})`
-      : `rgba(${c.r}, ${c.g}, ${c.r}, ${c.a})`
+      : `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})`
   )
 
 /**
@@ -791,6 +839,23 @@ export const isReadable =
 export const textColor = (c: Color): Color => (isLight(c) ? black : white)
 
 /**
+ * Compute the perceived 'distance' between two colors according to the CIE76
+ * delta-E standard. A distance below ~2.3 is not noticable.
+ *
+ * See: https://en.wikipedia.org/wiki/Color_difference
+ */
+export const distance =
+  (a: Color) =>
+  (b: Color): number => {
+    const ca = toLab(a)
+    const cb = toLab(b)
+
+    return Math.sqrt(
+      square(ca.l - cb.l) + square(ca.a - cb.a) + square(ca.b - cb.b)
+    )
+  }
+
+/**
  * @category instances
  * @since 0.1.0
  *
@@ -800,11 +865,11 @@ export const textColor = (c: Color): Color => (isLight(c) ? black : white)
  *   saturation values).
  */
 export const Eq: Equals.Eq<Color> = {
-  equals: (x, y) => {
-    const cx = toRGBA(x)
-    const cy = toRGBA(y)
+  equals: (a, b) => {
+    const ca = toRGBA(a)
+    const cb = toRGBA(b)
 
-    return cx.r == cy.r && cx.g == cy.g && cx.b == cy.b && cx.a == cy.a
+    return ca.r == cb.r && ca.g == cb.g && ca.b == cb.b && ca.a == cb.a
   }
 }
 
@@ -814,11 +879,11 @@ export const Eq: Equals.Eq<Color> = {
  */
 export const OrdLuminance: Ord.Ord<Color> = {
   equals: Eq.equals,
-  compare: (x, y) => {
-    const lx = luminance(x)
-    const ly = luminance(y)
+  compare: (a, b) => {
+    const la = luminance(a)
+    const lb = luminance(b)
 
-    return number.Ord.compare(lx, ly)
+    return number.Ord.compare(la, lb)
   }
 }
 

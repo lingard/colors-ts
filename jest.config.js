@@ -21,5 +21,6 @@ module.exports = {
       statements: 100
     }
   },
-  modulePathIgnorePatterns: ['util']
+  modulePathIgnorePatterns: ['util'],
+  setupFilesAfterEnv: ['./jest.setup.ts']
 }

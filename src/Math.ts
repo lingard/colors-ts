@@ -16,6 +16,8 @@ export const modPos =
 
 export const dist = ({ from, to }: Path): number => Math.abs(to - from)
 
+export const square = (x: number): number => Math.pow(x, 2.0)
+
 /**
  * Linearly interpolate between two values.
  */

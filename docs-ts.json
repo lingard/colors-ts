@@ -1,5 +1,6 @@
 {
   "exclude": [
-    "src/Math.ts"
+    "src/Math.ts",
+    "src/Int.ts"
   ]
 }
