@@ -1,6 +1,13 @@
+/**
+ * @since 0.1.0
+ */
+
 import { absurd } from 'fp-ts/function'
 import { Color, rgba2, toRGBA2 } from './Color'
 
+/**
+ * @since 0.1.0
+ */
 export type BlendMode = 'multiply' | 'screen' | 'overlay'
 
 /**
