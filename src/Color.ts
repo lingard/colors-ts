@@ -215,10 +215,6 @@ export const xyz = (x: number, y: number, z: number): Color => {
   const f = (c: number) =>
     c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1.0 / 2.4) - 0.055
 
-  // r = f ( 3.2406 * x - 1.5372 * y - 0.4986 * z)
-  // g = f (-0.9689 * x + 1.8758 * y + 0.0415 * z)
-  // b = f ( 0.0557 * x - 0.2040 * y + 1.0570 * z)
-
   const r = f(3.2406 * x - 1.5372 * y - 0.4986 * z)
   const g = f(-0.9689 * x + 1.8758 * y + 0.0415 * z)
   const b = f(0.0557 * x - 0.204 * y + 1.057 * z)

@@ -33,7 +33,7 @@ export const blendChannel =
         if (a < 0.5) {
           return 2.0 * (a * b)
         }
-        // 1.0 - 2.0 * (1.0 - b) * (1.0 - f)
+
         return 1.0 - 2.0 * (1.0 - a) * (1.0 - b)
       }
 
