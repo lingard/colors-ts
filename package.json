@@ -16,7 +16,7 @@
     "lint": "eslint --fix .",
     "jest-clear-cache": "jest --clearCache",
     "jest": "jest",
-    "test": "yarn lint && yarn jest-clear-cache && yarn jest && yarn docs",
+    "test": "npm run lint && npm run jest-clear-cache && npm run jest && npm run docs",
     "clean": "rimraf ./dist",
     "prebuild": "npm run clean",
     "build": "tsc -p ./tsconfig.build.json && tsc -p ./tsconfig.build-es6.json && ts-node scripts/build",
@@ -24,7 +24,7 @@
     "prepublishOnly": "ts-node scripts/pre-publish",
     "mocha": "mocha -r ts-node/register test/*.ts",
     "docs": "docs-ts",
-    "prerelease": "yarn build",
+    "prerelease": "npm run build",
     "release": "ts-node scripts/release"
   },
   "dependencies": {
