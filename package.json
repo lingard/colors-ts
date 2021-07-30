@@ -1,12 +1,12 @@
 {
-  "name": "fp-ts-colors",
+  "name": "colors-ts",
   "version": "0.1.0",
   "author": "Christer Lingard",
   "license": "MIT",
   "main": "lib/index.js",
   "module": "es6/index.js",
   "typings": "lib/index.d.ts",
-  "homepage": "https://github.com/lingard/fp-ts-colors",
+  "homepage": "https://lingard.github.io/colors-ts",
   "sideEffects": false,
   "scripts": {
     "lint": "eslint --fix .",

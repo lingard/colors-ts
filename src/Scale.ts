@@ -1,7 +1,6 @@
 /**
  * @since 0.1.0
  */
-
 import * as Ord from 'fp-ts/Ord'
 import * as number from 'fp-ts/number'
 import * as RA from 'fp-ts/ReadonlyArray'
@@ -20,6 +19,7 @@ interface RatioBrand {
  * ColorStop ratio
  *
  * @since 0.1.0
+ * @category model
  */
 export type Ratio = number & RatioBrand
 
@@ -27,6 +27,7 @@ export type Ratio = number & RatioBrand
  * A point on the color scale.
  *
  * @since 0.1.0
+ * @category model
  */
 export type ColorStop = readonly [C.Color, Ratio]
 
@@ -36,6 +37,7 @@ export type ColorStop = readonly [C.Color, Ratio]
  * and the second `Color` argument defines the right end point (color at ratio 1.0).
  *
  * @since 0.1.0
+ * @category model
  */
 export type ColorStops = readonly [C.Color, ReadonlyArray<ColorStop>, C.Color]
 
@@ -44,6 +46,7 @@ export type ColorStops = readonly [C.Color, ReadonlyArray<ColorStop>, C.Color]
  * used for interpolation between the stops.
  *
  * @since 0.1.0
+ * @category model
  */
 export type ColorScale = [C.ColorSpace, ColorStops]
 
@@ -121,8 +124,8 @@ export const stopColor = ([c]: ColorStop): C.Color => c
  *
  * @example
  *
- * import * as S from 'fp-ts-colors/Scale'
- * import * as X11 from 'fp-ts-colors/Scheme/X11'
+ * import * as S from 'colors-ts/Scale'
+ * import * as X11 from 'colors-ts/Scheme/X11'
  *
  * const stops = S.colorStops(X11.yellow, [], X11.blue)
  *
@@ -170,8 +173,8 @@ const epsilon = 0.000001
  *
  * @example
  *
- * import * as S from 'fp-ts-colors/Scale'
- * import * as X11 from 'fp-ts-colors/Scheme/X11'
+ * import * as S from 'colors-ts/Scale'
+ * import * as X11 from 'colors-ts/Scheme/X11'
  *
  * const stops = S.colorStops(X11.yellow, [], X11.blue)
 
@@ -351,9 +354,7 @@ export const colors =
       return [f(0)]
     }
 
-    const mkColor = (i: number) => f(i / (n - 1))
-
-    return A.makeBy(n - 1, mkColor)
+    return A.makeBy(n - 1, (i: number) => f(i / (n - 1)))
   }
 
 /**
@@ -364,3 +365,22 @@ export const colors =
  */
 export const sampleColors = (scale: ColorScale): ((n: number) => C.Color[]) =>
   colors(sample(scale))
+
+/**
+ * Modify a list of  `ColorStops` by applying the given function to each color
+ * stop. The first argument is the position of the color stop.
+ *
+ * @since 0.1.0
+ */
+export const modify =
+  (f: (i: number, c: C.Color) => C.Color) =>
+  ([start, middle, end]: ColorStops): ColorStops =>
+    colorStops(
+      f(0, start),
+      pipe(
+        middle,
+        RA.map(([c, r]) => colorStop(f(r, c), r)),
+        RA.toArray
+      ),
+      f(1, end)
+    )

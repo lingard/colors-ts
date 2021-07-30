@@ -14,8 +14,6 @@ export const modPos =
   (y: number): number =>
     ((x % y) + y) % y
 
-export const dist = ({ from, to }: Path): number => Math.abs(to - from)
-
 export const square = (x: number): number => Math.pow(x, 2.0)
 
 export const between =
@@ -40,6 +38,8 @@ export type Path = {
   from: number
   to: number
 }
+
+export const dist = ({ from, to }: Path): number => Math.abs(to - from)
 
 export const ordPath: Ord.Ord<Path> = Ord.fromCompare((a, b) => {
   const da = dist(a)

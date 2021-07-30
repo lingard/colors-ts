@@ -1,7 +1,7 @@
 /**
  * @since 0.1.0
  */
-
+import { Endomorphism } from 'fp-ts/function'
 import { modPos } from './Math'
 
 /**
@@ -14,4 +14,5 @@ export type Hue = number
  *
  * @since 0.1.0
  */
-export const clipHue = (hue: Hue): Hue => (hue === 360 ? hue : modPos(hue)(360))
+export const clipHue: Endomorphism<Hue> = (hue) =>
+  hue === 360 ? hue : modPos(hue)(360)

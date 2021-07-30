@@ -20,17 +20,19 @@ Added in v0.1.0
 - [deconstructors](#deconstructors)
   - [stopColor](#stopcolor)
   - [stopRatio](#stopratio)
-- [utils](#utils)
+- [model](#model)
   - [ColorScale (type alias)](#colorscale-type-alias)
   - [ColorStop (type alias)](#colorstop-type-alias)
   - [ColorStops (type alias)](#colorstops-type-alias)
   - [Ratio (type alias)](#ratio-type-alias)
+- [utils](#utils)
   - [addScaleStop](#addscalestop)
   - [addStop](#addstop)
   - [colors](#colors)
   - [combineColorStops](#combinecolorstops)
   - [combineStops](#combinestops)
   - [mkSimpleSampler](#mksimplesampler)
+  - [modify](#modify)
   - [reverseStops](#reversestops)
   - [sample](#sample)
   - [sampleColors](#samplecolors)
@@ -117,7 +119,7 @@ export declare const stopRatio: ([, r]: ColorStop) => Ratio
 
 Added in v0.1.0
 
-# utils
+# model
 
 ## ColorScale (type alias)
 
@@ -169,6 +171,8 @@ export type Ratio = number & RatioBrand
 ```
 
 Added in v0.1.0
+
+# utils
 
 ## addScaleStop
 
@@ -224,8 +228,8 @@ export declare const combineColorStops: (
 **Example**
 
 ```ts
-import * as S from 'fp-ts-colors/Scale'
-import * as X11 from 'fp-ts-colors/Scheme/X11'
+import * as S from 'colors-ts/Scale'
+import * as X11 from 'colors-ts/Scheme/X11'
 
 const stops = S.colorStops(X11.yellow, [], X11.blue)
 
@@ -253,8 +257,8 @@ export declare const combineStops: (
 **Example**
 
 ```ts
-import * as S from 'fp-ts-colors/Scale'
-import * as X11 from 'fp-ts-colors/Scheme/X11'
+import * as S from 'colors-ts/Scale'
+import * as X11 from 'colors-ts/Scheme/X11'
 
 const stops = S.colorStops(X11.yellow, [], X11.blue)
 
@@ -275,6 +279,19 @@ number is larger than 1, the color at 1 is returned.
 export declare const mkSimpleSampler: (
   interpolate: C.Interpolator
 ) => ([start, middle, end]: ColorStops) => (x: number) => C.Color
+```
+
+Added in v0.1.0
+
+## modify
+
+Modify a list of `ColorStops` by applying the given function to each color
+stop. The first argument is the position of the color stop.
+
+**Signature**
+
+```ts
+export declare const modify: (f: (i: number, c: C.Color) => C.Color) => ([start, middle, end]: ColorStops) => ColorStops
 ```
 
 Added in v0.1.0

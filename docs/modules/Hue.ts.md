@@ -37,7 +37,7 @@ Assert that the hue angle is in the interval [0, 360].
 **Signature**
 
 ```ts
-export declare const clipHue: (hue: Hue) => Hue
+export declare const clipHue: Endomorphism<number>
 ```
 
 Added in v0.1.0

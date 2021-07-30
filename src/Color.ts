@@ -1,7 +1,6 @@
 /**
  * @since 0.1.0
  */
-
 import * as Ord from 'fp-ts/Ord'
 import * as Equals from 'fp-ts/Eq'
 import * as S from 'fp-ts/Show'
@@ -61,6 +60,12 @@ export type Color = readonly [
   alpha: number
 ] &
   ColorBrand
+
+/**
+ * @category model
+ * @since 0.1.0
+ */
+export type ColorSpace = 'rgb' | 'hsl' | 'LCh' | 'Lab'
 
 /**
  * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
@@ -326,7 +331,7 @@ const shr =
  *
  * @example
  *
- * import * as C from 'fp-ts-colors/Color'
+ * import * as C from 'colors-ts/Color'
  *
  * C.fromInt(0xff0000)
  *
@@ -692,11 +697,6 @@ export const toGray: Endomorphism<Color> = (c) =>
 export type Interpolator = (
   start: Color
 ) => (end: Color) => (ratio: number) => Color
-
-/**
- * @since 0.1.0
- */
-export type ColorSpace = 'rgb' | 'hsl' | 'LCh' | 'Lab'
 
 /**
  * Mix two colors by linearly interpolating between them in the RGB color space.

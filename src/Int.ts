@@ -1,7 +1,6 @@
 /**
  * @since 0.1.0
  */
-
 import * as O from 'fp-ts/Option'
 
 type Int = number
@@ -52,7 +51,7 @@ export const radix = (n: Int): O.Option<Radix> =>
  *
  * @example
  *
- * import * as Int from 'fp-ts-colors/Int'
+ * import * as Int orsfrom 'colors-ts/Int'
  *
  * const s = ''
  *

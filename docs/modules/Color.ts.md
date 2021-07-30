@@ -46,8 +46,8 @@ Added in v0.1.0
   - [Show](#show)
 - [model](#model)
   - [Color (type alias)](#color-type-alias)
-- [utils](#utils)
   - [ColorSpace (type alias)](#colorspace-type-alias)
+- [utils](#utils)
   - [Interpolator (type alias)](#interpolator-type-alias)
   - [brightness](#brightness)
   - [complementary](#complementary)
@@ -115,7 +115,7 @@ export declare const fromInt: (i: number) => Color
 **Example**
 
 ```ts
-import * as C from 'fp-ts-colors/Color'
+import * as C from 'colors-ts/Color'
 
 C.fromInt(0xff0000)
 ```
@@ -494,8 +494,6 @@ export type Color = readonly [hue: Hue, saturation: number, lightness: number, a
 
 Added in v0.1.0
 
-# utils
-
 ## ColorSpace (type alias)
 
 **Signature**
@@ -505,6 +503,8 @@ export type ColorSpace = 'rgb' | 'hsl' | 'LCh' | 'Lab'
 ```
 
 Added in v0.1.0
+
+# utils
 
 ## Interpolator (type alias)
 
