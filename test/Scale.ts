@@ -1,7 +1,7 @@
 import * as C from '../src/Color'
 import * as S from '../src/Scale'
 import * as A from 'fp-ts/Array'
-import { blue, hotpink, magenta, red, yellow } from '../src/Scheme/X11'
+import { blue, hotpink, magenta, red, yellow } from '../src/X11'
 
 const scale = S.colorScale('hsl', red, [S.colorStop(blue, 0.3)], yellow)
 

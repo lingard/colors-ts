@@ -6,10 +6,13 @@ import * as number from 'fp-ts/number'
 import * as RA from 'fp-ts/ReadonlyArray'
 import * as A from 'fp-ts/Array'
 import * as O from 'fp-ts/Option'
+import * as boolean from 'fp-ts/boolean'
+import * as string from 'fp-ts/string'
 import * as C from './Color'
 import { constant, Endomorphism, pipe } from 'fp-ts/function'
-import { Foldable1, toReadonlyArray } from 'fp-ts/Foldable'
+import { Foldable1, intercalate, toReadonlyArray } from 'fp-ts/Foldable'
 import { Kind, URIS } from 'fp-ts/HKT'
+import { red, yellow } from './X11'
 
 interface RatioBrand {
   readonly Ratio: unique symbol
@@ -116,6 +119,15 @@ export const stopRatio = ([, r]: ColorStop): Ratio => r
 export const stopColor = ([c]: ColorStop): C.Color => c
 
 /**
+ * Extract the colors of a ColorScale to an array
+ *
+ * @category deconstructors
+ * @since 0.1.0
+ */
+export const toArray = ([, stops]: ColorScale): C.Color[] =>
+  pipe(stops, ([s, m, e]) => pipe(m, RA.map(stopColor), (m) => [s, ...m, e]))
+
+/**
  * Like `combineColorStops`, but the width of the "transition zone" can be specified as the
  * first argument.
  *
@@ -125,7 +137,7 @@ export const stopColor = ([c]: ColorStop): C.Color => c
  * @example
  *
  * import * as S from 'ts-colors/Scale'
- * import * as X11 from 'ts-colors/Scheme/X11'
+ * import * as X11 from 'ts-colors/X11'
  *
  * const stops = S.colorStops(X11.yellow, [], X11.blue)
  *
@@ -174,7 +186,7 @@ const epsilon = 0.000001
  * @example
  *
  * import * as S from 'ts-colors/Scale'
- * import * as X11 from 'ts-colors/Scheme/X11'
+ * import * as X11 from 'ts-colors/X11'
  *
  * const stops = S.colorStops(X11.yellow, [], X11.blue)
 
@@ -258,9 +270,8 @@ const insertByRatio = insertBy(OrdColorStop)
  * @since 0.1.0
  */
 export const addStop =
-  ([s, m, e]: ColorStops) =>
-  (c: C.Color) =>
-  (r: number): ColorStops =>
+  (c: C.Color, r: number) =>
+  ([s, m, e]: ColorStops): ColorStops =>
     pipe(
       colorStop(c, r),
       (stop) => pipe(m, insertByRatio(stop)),
@@ -273,10 +284,9 @@ export const addStop =
  * @since 0.1.0
  */
 export const addScaleStop =
-  ([mode, s]: ColorScale) =>
-  (c: C.Color) =>
-  (r: number): ColorScale =>
-    pipe(addStop(s)(c)(r), ([s, m, e]) => colorScale(mode, s, RA.toArray(m), e))
+  (c: C.Color, r: number) =>
+  ([mode, s]: ColorScale): ColorScale =>
+    pipe(s, addStop(c, r), ([s, m, e]) => colorScale(mode, s, RA.toArray(m), e))
 
 const between = Ord.between(number.Ord)
 
@@ -384,3 +394,144 @@ export const modify =
       ),
       f(1, end)
     )
+
+/**
+ * A spectrum of fully saturated hues (HSL color space).
+ *
+ * @since 0.1.0
+ */
+export const spectrum = (): ColorScale => {
+  const end = C.hsl(0.0, 1.0, 0.5)
+  const stops = pipe(
+    A.range(1, 35),
+    A.map((i) => colorStop(C.hsl(10.0 * i, 1.0, 0.5), i / 36.0))
+  )
+
+  return colorScale('hsl', end, stops, end)
+}
+
+/**
+ * A perceptually-uniform, diverging color scale from blue to red, similar to
+ * the ColorBrewer scale 'RdBu'.
+ *
+ * @since 0.1.0
+ */
+export const blueToRed = (): ColorScale => {
+  const gray = C.fromInt(0xf7f7f7)
+  const red = C.fromInt(0xb2182b)
+  const blue = C.fromInt(0x2166ac)
+
+  return uniformScale(A.Foldable)('Lab')(blue, [gray], red)
+}
+
+/**
+ * A perceptually-uniform, multi-hue color scale from yellow to red, similar
+ * to the ColorBrewer scale YlOrRd.
+ *
+ * @since 0.1.0
+ */
+export const yellowToRed = (): ColorScale => {
+  const yellow = C.fromInt(0xffffcc)
+  const orange = C.fromInt(0xfd8d3c)
+  const red = C.fromInt(0x800026)
+
+  return uniformScale(A.Foldable)('Lab')(yellow, [orange], red)
+}
+
+/**
+ * A color scale that represents 'hot' colors.
+ *
+ * @since 0.1.0
+ */
+export const hot = colorScale(
+  'rgb',
+  C.black,
+  [colorStop(red, 0.5), colorStop(yellow, 0.75)],
+  C.white
+)
+
+/**
+ * A color scale that represents 'cool' colors.
+ *
+ * @since 0.1.0
+ */
+export const cool = colorScale(
+  'rgb',
+  C.hsl(180.0, 1.0, 0.6),
+  [],
+  C.hsl(300.0, 1.0, 0.5)
+)
+
+/**
+ * Takes number of stops `ColorStops` should contain, function to generate
+ * missing colors and `ColorStops` itself.
+ *
+ * @since 0.1.0
+ */
+export const minColorStops =
+  (n: number, sampler: (stops: ColorStops) => (n: number) => C.Color) =>
+  (stops: ColorStops): ColorStops => {
+    if (n === 0) {
+      return stops
+    }
+
+    const additionalStops = pipe(
+      n <= 2,
+      boolean.fold(constant([]), () =>
+        pipe(
+          A.range(1, n - 1),
+          A.map((step) => ratio(step / n)),
+          A.map((frac) => colorStop(sampler(stops)(frac), frac))
+        )
+      )
+    )
+
+    return pipe(
+      additionalStops,
+      A.reduce(stops, (stops, [c, r]) => pipe(stops, addStop(c, r)))
+    )
+  }
+
+const intercalateAS = intercalate(string.Monoid, RA.Foldable)
+
+/**
+ * Underling function of `cssColorStops`.
+ */
+const cssColorStopsRGB = ([s, m, e]: ColorStops): string => {
+  if (RA.isEmpty(m)) {
+    return `${C.cssStringHSLA(s)}, ${C.cssStringHSLA(e)}`
+  }
+
+  const percentage = (r: number) => `${r * 100.0}%`
+  const toString = ([c, r]: ColorStop) =>
+    `${C.cssStringHSLA(c)} ${percentage(r)}`
+  const stops = pipe(m, RA.map(toString), (stop) => intercalateAS(', ', stop))
+
+  return `${C.cssStringHSLA(s)}, ${stops}, ${C.cssStringHSLA(e)}`
+}
+
+/**
+ * A CSS representation of the color scale in the form of a comma-separated
+ * list of color stops. This list can be used in a `linear-gradient` or
+ * a similar construct.
+ *
+ * Note that CSS uses the RGB space for color interpolation. Consequently, if
+ * the color scale is in RGB mode, this is just a list of all defined color
+ * stops.
+ *
+ * For other color spaces, the color scale is sampled at (at least) 10
+ * different points. This should give a reasonable approximation to the true
+ * gradient in the specified color space.
+ *
+ * @since 0.1.0
+ */
+export const cssColorStops = ([space, stops]: ColorScale): string => {
+  if (space === 'rgb') {
+    return cssColorStopsRGB(stops)
+  }
+
+  const interpolate = C.mix(space)
+  const sample = mkSimpleSampler(interpolate)
+
+  return pipe(stops, minColorStops(10, sample), cssColorStopsRGB)
+}

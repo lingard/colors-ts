@@ -1,10 +1,11 @@
 /**
- * @since 0.1.0
  * X11 colors as specified by the CSS3 specification (except black and white).
  * See: https://www.w3.org/TR/css3-color/#svg-color
+ *
+ * @since 0.1.0
  */
 
-import { rgb } from '../Color'
+import { rgb } from './Color'
 
 /**
  * @since 0.1.0

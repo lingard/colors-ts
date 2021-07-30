@@ -17,7 +17,7 @@ import {
   purple,
   red,
   yellow
-} from '../src/Scheme/X11'
+} from '../src/X11'
 import { blend } from '../src/Blending'
 
 describe('Color', () => {
