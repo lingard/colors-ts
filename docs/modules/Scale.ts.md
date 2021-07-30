@@ -20,6 +20,7 @@ Added in v0.1.0
 - [deconstructors](#deconstructors)
   - [stopColor](#stopcolor)
   - [stopRatio](#stopratio)
+  - [toArray](#toarray)
 - [model](#model)
   - [ColorScale (type alias)](#colorscale-type-alias)
   - [ColorStop (type alias)](#colorstop-type-alias)
@@ -28,16 +29,23 @@ Added in v0.1.0
 - [utils](#utils)
   - [addScaleStop](#addscalestop)
   - [addStop](#addstop)
+  - [blueToRed](#bluetored)
   - [colors](#colors)
   - [combineColorStops](#combinecolorstops)
   - [combineStops](#combinestops)
+  - [cool](#cool)
+  - [cssColorStops](#csscolorstops)
+  - [hot](#hot)
+  - [minColorStops](#mincolorstops)
   - [mkSimpleSampler](#mksimplesampler)
   - [modify](#modify)
   - [reverseStops](#reversestops)
   - [sample](#sample)
   - [sampleColors](#samplecolors)
+  - [spectrum](#spectrum)
   - [uniformScale](#uniformscale)
   - [uniformStops](#uniformstops)
+  - [yellowToRed](#yellowtored)
 
 ---
 
@@ -119,6 +127,18 @@ export declare const stopRatio: ([, r]: ColorStop) => Ratio
 
 Added in v0.1.0
 
+## toArray
+
+Extract the colors of a ColorScale to an array
+
+**Signature**
+
+```ts
+export declare const toArray: ([, stops]: ColorScale) => C.Color[]
+```
+
+Added in v0.1.0
+
 # model
 
 ## ColorScale (type alias)
@@ -181,7 +201,7 @@ Add a stop to a color scale.
 **Signature**
 
 ```ts
-export declare const addScaleStop: ([mode, s]: ColorScale) => (c: C.Color) => (r: number) => ColorScale
+export declare const addScaleStop: (c: C.Color, r: number) => ([mode, s]: ColorScale) => ColorScale
 ```
 
 Added in v0.1.0
@@ -193,7 +213,20 @@ Add a stop to a list of `ColorStops`.
 **Signature**
 
 ```ts
-export declare const addStop: ([s, m, e]: ColorStops) => (c: C.Color) => (r: number) => ColorStops
+export declare const addStop: (c: C.Color, r: number) => ([s, m, e]: ColorStops) => ColorStops
+```
+
+Added in v0.1.0
+
+## blueToRed
+
+A perceptually-uniform, diverging color scale from blue to red, similar to
+the ColorBrewer scale 'RdBu'.
+
+**Signature**
+
+```ts
+export declare const blueToRed: () => ColorScale
 ```
 
 Added in v0.1.0
@@ -229,7 +262,7 @@ export declare const combineColorStops: (
 
 ```ts
 import * as S from 'ts-colors/Scale'
-import * as X11 from 'ts-colors/Scheme/X11'
+import * as X11 from 'ts-colors/X11'
 
 const stops = S.colorStops(X11.yellow, [], X11.blue)
 
@@ -258,11 +291,73 @@ export declare const combineStops: (
 
 ```ts
 import * as S from 'ts-colors/Scale'
-import * as X11 from 'ts-colors/Scheme/X11'
+import * as X11 from 'ts-colors/X11'
 
 const stops = S.colorStops(X11.yellow, [], X11.blue)
 
 S.combineStops(0.0005)(0.5)(stops)
+```
+
+Added in v0.1.0
+
+## cool
+
+A color scale that represents 'cool' colors.
+
+**Signature**
+
+```ts
+export declare const cool: ColorScale
+```
+
+Added in v0.1.0
+
+## cssColorStops
+
+A CSS representation of the color scale in the form of a comma-separated
+list of color stops. This list can be used in a `linear-gradient` or
+a similar construct.
+
+Note that CSS uses the RGB space for color interpolation. Consequently, if
+the color scale is in RGB mode, this is just a list of all defined color
+stops.
+
+For other color spaces, the color scale is sampled at (at least) 10
+different points. This should give a reasonable approximation to the true
+gradient in the specified color space.
+
+**Signature**
+
+```ts
+export declare const cssColorStops: ([space, stops]: ColorScale) => string
+```
+
+Added in v0.1.0
+
+## hot
+
+A color scale that represents 'hot' colors.
+
+**Signature**
+
+```ts
+export declare const hot: ColorScale
+```
+
+Added in v0.1.0
+
+## minColorStops
+
+Takes number of stops `ColorStops` should contain, function to generate
+missing colors and `ColorStops` itself.
+
+**Signature**
+
+```ts
+export declare const minColorStops: (
+  n: number,
+  sampler: (stops: ColorStops) => (n: number) => C.Color
+) => (stops: ColorStops) => ColorStops
 ```
 
 Added in v0.1.0
@@ -334,6 +429,18 @@ export declare const sampleColors: (scale: ColorScale) => (n: number) => C.Color
 
 Added in v0.1.0
 
+## spectrum
+
+A spectrum of fully saturated hues (HSL color space).
+
+**Signature**
+
+```ts
+export declare const spectrum: () => ColorScale
+```
+
+Added in v0.1.0
+
 ## uniformScale
 
 Create a uniform color scale from a list of colors that will be evenly
@@ -380,6 +487,19 @@ export declare const uniformStops: <
 >(
   F: Foldable1<F>
 ) => (s: C.Color, m: Kind<F, C.Color>, e: C.Color) => ColorStops
+```
+
+Added in v0.1.0
+
+## yellowToRed
+
+A perceptually-uniform, multi-hue color scale from yellow to red, similar
+to the ColorBrewer scale YlOrRd.
+
+**Signature**
+
+```ts
+export declare const yellowToRed: () => ColorScale
 ```
 
 Added in v0.1.0
