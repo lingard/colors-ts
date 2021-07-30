@@ -5,5 +5,5 @@ search_enabled: true
 
 # Aux links for the upper right navigation
 aux_links:
-  'colors-ts on GitHub':
-    - 'https://lingard.github.io/colors-ts'
+  'ts-colors on GitHub':
+    - 'https://lingard.github.io/ts-colors'

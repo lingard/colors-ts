@@ -228,8 +228,8 @@ export declare const combineColorStops: (
 **Example**
 
 ```ts
-import * as S from 'colors-ts/Scale'
-import * as X11 from 'colors-ts/Scheme/X11'
+import * as S from 'ts-colors/Scale'
+import * as X11 from 'ts-colors/Scheme/X11'
 
 const stops = S.colorStops(X11.yellow, [], X11.blue)
 
@@ -257,8 +257,8 @@ export declare const combineStops: (
 **Example**
 
 ```ts
-import * as S from 'colors-ts/Scale'
-import * as X11 from 'colors-ts/Scheme/X11'
+import * as S from 'ts-colors/Scale'
+import * as X11 from 'ts-colors/Scheme/X11'
 
 const stops = S.colorStops(X11.yellow, [], X11.blue)
 

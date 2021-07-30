@@ -51,7 +51,7 @@ export const radix = (n: Int): O.Option<Radix> =>
  *
  * @example
  *
- * import * as Int orsfrom 'colors-ts/Int'
+ * import * as Int orsfrom 'ts-colors/Int'
  *
  * const s = ''
  *

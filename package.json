@@ -1,12 +1,12 @@
 {
-  "name": "colors-ts",
+  "name": "ts-colors",
   "version": "0.1.0",
   "author": "Christer Lingard",
   "license": "MIT",
   "main": "lib/index.js",
   "module": "es6/index.js",
   "typings": "lib/index.d.ts",
-  "homepage": "https://lingard.github.io/colors-ts",
+  "homepage": "https://lingard.github.io/ts-colors",
   "sideEffects": false,
   "scripts": {
     "lint": "eslint --fix .",

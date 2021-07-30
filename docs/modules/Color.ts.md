@@ -115,7 +115,7 @@ export declare const fromInt: (i: number) => Color
 **Example**
 
 ```ts
-import * as C from 'colors-ts/Color'
+import * as C from 'ts-colors/Color'
 
 C.fromInt(0xff0000)
 ```

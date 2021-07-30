@@ -5,6 +5,7 @@ import { absurd } from 'fp-ts/function'
 import { Color, rgba2, toRGBA2 } from './Color'
 
 /**
+ * @category model
  * @since 0.1.0
  */
 export type BlendMode = 'multiply' | 'screen' | 'overlay'
@@ -12,7 +13,6 @@ export type BlendMode = 'multiply' | 'screen' | 'overlay'
 /**
  * Blend two RGB channel values (numbers between 0.0 and 1.0).
  *
- * @category constructors
  * @since 0.1.0
  */
 export const blendChannel =
@@ -47,7 +47,6 @@ export const blendChannel =
  * background color, the second one is the foreground color. The resulting
  * alpha value is calculated as arithmetic mean.
  *
- * @category constructors
  * @since 0.1.0
  */
 export const blend =
@@ -65,3 +64,18 @@ export const blend =
       (ac.a + bc.a) / 2.0
     )
   }
+
+/**
+ * @since 0.1.0
+ */
+export const multiply = blend('multiply')
+
+/**
+ * @since 0.1.0
+ */
+export const screen = blend('screen')
+
+/**
+ * @since 0.1.0
+ */
+export const overlay = blend('overlay')

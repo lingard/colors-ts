@@ -124,8 +124,8 @@ export const stopColor = ([c]: ColorStop): C.Color => c
  *
  * @example
  *
- * import * as S from 'colors-ts/Scale'
- * import * as X11 from 'colors-ts/Scheme/X11'
+ * import * as S from 'ts-colors/Scale'
+ * import * as X11 from 'ts-colors/Scheme/X11'
  *
  * const stops = S.colorStops(X11.yellow, [], X11.blue)
  *
@@ -173,8 +173,8 @@ const epsilon = 0.000001
  *
  * @example
  *
- * import * as S from 'colors-ts/Scale'
- * import * as X11 from 'colors-ts/Scheme/X11'
+ * import * as S from 'ts-colors/Scale'
+ * import * as X11 from 'ts-colors/Scheme/X11'
  *
  * const stops = S.colorStops(X11.yellow, [], X11.blue)
 
