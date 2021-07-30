@@ -47,6 +47,8 @@ Added in v0.1.0
 - [model](#model)
   - [Color (type alias)](#color-type-alias)
 - [utils](#utils)
+  - [ColorSpace (type alias)](#colorspace-type-alias)
+  - [Interpolator (type alias)](#interpolator-type-alias)
   - [brightness](#brightness)
   - [complementary](#complementary)
   - [contrast](#contrast)
@@ -57,6 +59,7 @@ Added in v0.1.0
   - [isReadable](#isreadable)
   - [lighten](#lighten)
   - [luminance](#luminance)
+  - [mix](#mix)
   - [mixHSL](#mixhsl)
   - [mixLCh](#mixlch)
   - [mixLab](#mixlab)
@@ -486,14 +489,36 @@ Note:
 **Signature**
 
 ```ts
-export type Color = readonly [unclampedHue: Hue, saturation: number, lightness: number, alpha: number] & {
-  readonly Color: unique symbol
-}
+export type Color = readonly [hue: Hue, saturation: number, lightness: number, alpha: number] & ColorBrand
 ```
 
 Added in v0.1.0
 
 # utils
+
+## ColorSpace (type alias)
+
+**Signature**
+
+```ts
+export type ColorSpace = 'rgb' | 'hsl' | 'LCh' | 'Lab'
+```
+
+Added in v0.1.0
+
+## Interpolator (type alias)
+
+A function that interpolates between two colors. It takes a start color,
+an end color, and a ratio in the interval [0.0, 1.0]. It returns the
+mixed color.
+
+**Signature**
+
+```ts
+export type Interpolator = (start: Color) => (end: Color) => (ratio: number) => Color
+```
+
+Added in v0.1.0
 
 ## brightness
 
@@ -631,6 +656,18 @@ See: https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
 
 ```ts
 export declare const luminance: (color: Color) => number
+```
+
+Added in v0.1.0
+
+## mix
+
+Mix two colors by linearly interpolating between them in the RGB color space.
+
+**Signature**
+
+```ts
+export declare const mix: (space: ColorSpace) => Interpolator
 ```
 
 Added in v0.1.0

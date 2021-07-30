@@ -1,3 +1,7 @@
+/**
+ * @since 0.1.0
+ */
+
 import * as Ord from 'fp-ts/Ord'
 import * as number from 'fp-ts/number'
 import * as RA from 'fp-ts/ReadonlyArray'
@@ -12,10 +16,17 @@ interface RatioBrand {
   readonly Ratio: unique symbol
 }
 
+/**
+ * ColorStop ratio
+ *
+ * @since 0.1.0
+ */
 export type Ratio = number & RatioBrand
 
 /**
  * A point on the color scale.
+ *
+ * @since 0.1.0
  */
 export type ColorStop = readonly [C.Color, Ratio]
 
@@ -23,12 +34,16 @@ export type ColorStop = readonly [C.Color, Ratio]
  * Represents all `ColorStops` in a color scale. The first `Color` defines the left end
  * (color at ratio 0.0), the list of stops defines possible intermediate steps
  * and the second `Color` argument defines the right end point (color at ratio 1.0).
+ *
+ * @since 0.1.0
  */
 export type ColorStops = readonly [C.Color, ReadonlyArray<ColorStop>, C.Color]
 
 /**
  * A color scale is represented by a list of `ColorStops` and a `ColorSpace` that is
  * used for interpolation between the stops.
+ *
+ * @since 0.1.0
  */
 export type ColorScale = [C.ColorSpace, ColorStops]
 
@@ -41,6 +56,9 @@ const ratio = (r: number) => clamp1(r) as Ratio
 /**
  * Create a color stop from a given `Color` and a number between 0 and 1.
  * If the number is outside this range, it is clamped.
+ *
+ * @category constructors
+ * @since 0.1.0
  */
 export const colorStop = (c: C.Color, r: number): ColorStop => [c, ratio(r)]
 
@@ -98,16 +116,17 @@ export const stopColor = ([c]: ColorStop): C.Color => c
  * Like `combineColorStops`, but the width of the "transition zone" can be specified as the
  * first argument.
  *
+ * Here, the color at `x` will be orange and color at `x - epsilon` will be blue.
+ * If we want the color at `x` to be blue, `combineStops' epsilon (x + epsilon)` could be used.
+ *
  * @example
  *
  * import * as S from 'fp-ts-colors/Scale'
+ * import * as X11 from 'fp-ts-colors/Scheme/X11'
  *
- * declare const orangeToGray: ColorStops
+ * const stops = S.colorStops(X11.yellow, [], X11.blue)
  *
- * S.combineStops(0.0005)(0.5)(orangeToGray)
- *
- * Here, the color at `x` will be orange and color at `x - epsilon` will be blue.
- * If we want the color at `x` to be blue, `combineStops' epsilon (x + epsilon)` could be used.
+ * S.combineStops(0.0005)(0.5)(stops)
  *
  * @since 0.1.0
  */
@@ -149,13 +168,14 @@ const epsilon = 0.000001
  * a number between zero and one. The color right at the transition point is the first
  * color of the second color scale.
  *
- * @example:
+ * @example
  *
  * import * as S from 'fp-ts-colors/Scale'
+ * import * as X11 from 'fp-ts-colors/Scheme/X11'
  *
- * declare const orangeToGray: ColorStops
- *
- * S.combineStops(0.4)(orangeToGray)
+ * const stops = S.colorStops(X11.yellow, [], X11.blue)
+
+ * S.combineColorStops(0.4)(stops)
  *
  * @since 0.1.0
  */
@@ -253,7 +273,7 @@ export const addScaleStop =
   ([mode, s]: ColorScale) =>
   (c: C.Color) =>
   (r: number): ColorScale =>
-    pipe(addStop(s)(c)(r), (s) => colorScale(mode, ...s))
+    pipe(addStop(s)(c)(r), ([s, m, e]) => colorScale(mode, s, RA.toArray(m), e))
 
 const between = Ord.between(number.Ord)
 
