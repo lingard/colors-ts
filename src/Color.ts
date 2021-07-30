@@ -42,6 +42,10 @@ const clampRGB = (r: number, g: number, b: number) => [
 const strMatch = (pattern: RegExp) => (str: string) =>
   O.fromNullable(str.match(pattern))
 
+interface ColorBrand {
+  readonly Color: unique symbol
+}
+
 /**
  * Note:
  * - Colors outside the sRGB gamut which cannot be displayed on a typical
@@ -51,13 +55,12 @@ const strMatch = (pattern: RegExp) => (str: string) =>
  * @since 0.1.0
  */
 export type Color = readonly [
-  unclampedHue: Hue,
+  hue: Hue,
   saturation: number,
   lightness: number,
   alpha: number
-] & {
-  readonly Color: unique symbol
-}
+] &
+  ColorBrand
 
 /**
  * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
@@ -683,8 +686,12 @@ export const toGray: Endomorphism<Color> = (c) =>
  * A function that interpolates between two colors. It takes a start color,
  * an end color, and a ratio in the interval [0.0, 1.0]. It returns the
  * mixed color.
+ *
+ * @since 0.1.0
  */
-type Interpolator = (start: Color) => (end: Color) => (ratio: number) => Color
+export type Interpolator = (
+  start: Color
+) => (end: Color) => (ratio: number) => Color
 
 /**
  * @since 0.1.0

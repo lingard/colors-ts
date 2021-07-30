@@ -1,5 +1,7 @@
 WIP
 
+typescript port of [https://github.com/sharkdp/purescript-colors](https://github.com/sharkdp/purescript-colors)
+
 ```typescript
 import * as C from 'fp-ts-color/Color'
 import * as X11 from 'fp-ts-color/X11'
