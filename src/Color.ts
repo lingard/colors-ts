@@ -384,7 +384,7 @@ export const toRGBA2: (c: Color) => {
   b: number
   a: number
 } = ([hue, s, l, a]) => {
-  const h = clipHue(hue / 60.0)
+  const h = clipHue(hue) / 60.0
   const chr = (1.0 - Math.abs(2.0 * l - 1.0)) * s
   const m = l - chr / 2.0
   const x = chr * (1.0 - Math.abs((h % 2.0) - 1.0))
@@ -723,7 +723,7 @@ export const mix =
         const f = toRGBA2(c1)
         const t = toRGBA2(c2)
 
-        return rgba(i(f.r)(t.r), i(f.g)(t.g), i(f.b)(t.b), i(f.a)(t.a))
+        return rgba2(i(f.r)(t.r), i(f.g)(t.g), i(f.b)(t.b), i(f.a)(t.a))
       }
 
       case 'LCh': {
