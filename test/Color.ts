@@ -291,7 +291,9 @@ describe('Color', () => {
 
   test('distance', () => {
     expect(C.distance(red)(red)).toEqual(0.0)
-    expect(C.distance(C.rgb(50, 100, 200))(C.rgb(200, 10, 0))).toEqual(123)
+    expect(
+      pipe(C.distance(C.rgb(50, 100, 200))(C.rgb(200, 10, 0)), Math.round)
+    ).toEqual(123)
   })
 })
 
