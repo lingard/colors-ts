@@ -18,7 +18,6 @@ import {
   red,
   yellow
 } from '../src/X11'
-import { blend } from '../src/Blending'
 
 describe('Color', () => {
   test('Eq instance', () => {
@@ -293,15 +292,6 @@ describe('Color', () => {
   test('distance', () => {
     expect(C.distance(red)(red)).toEqual(0.0)
     expect(C.distance(C.rgb(50, 100, 200))(C.rgb(200, 10, 0))).toEqual(123)
-  })
-
-  test('blend', () => {
-    const b = C.rgb(255, 102, 0)
-    const f = C.rgb(51, 51, 51)
-
-    expect(blend('multiply')(b)(f)).toEqualColor(C.rgb(51, 20, 0))
-    expect(blend('screen')(b)(f)).toEqualColor(C.rgb(255, 133, 51))
-    expect(blend('overlay')(b)(f)).toEqualColor(C.rgb(255, 41, 0))
   })
 })
 

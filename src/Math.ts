@@ -3,7 +3,6 @@ import * as Ord from 'fp-ts/Ord'
 import * as RNEA from 'fp-ts/ReadonlyNonEmptyArray'
 
 export const deg2rad = Math.PI / 180.0
-
 export const rad2deg = 180.0 / Math.PI
 
 /**
@@ -49,7 +48,7 @@ export const ordPath: Ord.Ord<Path> = Ord.fromCompare((a, b) => {
     return 0
   }
 
-  return da > db ? 1 : 0
+  return da > db ? 1 : -1
 })
 
 /**

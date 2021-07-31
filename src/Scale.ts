@@ -345,7 +345,7 @@ export const mkSimpleSampler =
  * @since 0.1.0
  */
 export const sample = ([mode, scale]: ColorScale): ((x: number) => C.Color) =>
-  mkSimpleSampler(C.mix(mode))(scale)
+  pipe(scale, mkSimpleSampler(C.mix(mode)))
 
 /**
  * Takes a sampling function and returns a list of colors that is sampled via
@@ -364,7 +364,7 @@ export const colors =
       return [f(0)]
     }
 
-    return A.makeBy(n - 1, (i: number) => f(i / (n - 1)))
+    return A.makeBy(n, (i: number) => f(i / (n - 1)))
   }
 
 /**
@@ -373,8 +373,10 @@ export const colors =
  *
  * @since 0.1.0
  */
-export const sampleColors = (scale: ColorScale): ((n: number) => C.Color[]) =>
-  colors(sample(scale))
+export const sampleColors =
+  (x: number) =>
+  (scale: ColorScale): C.Color[] =>
+    pipe(x, colors(sample(scale)))
 
 /**
  * Modify a list of  `ColorStops` by applying the given function to each color

@@ -7,7 +7,10 @@ expect.extend({
     if (!C.Eq.equals(actual, expected)) {
       return {
         pass: false,
-        message: () => `expected \`${expected}\` recieved \`${actual}\``
+        message: () =>
+          `expected \`${C.cssStringRGBA(
+            expected
+          )}\` recieved \`${C.cssStringRGBA(actual)}\``
       }
     }
 
@@ -21,7 +24,10 @@ expect.extend({
     if (C.Eq.equals(actual, expected)) {
       return {
         pass: false,
-        message: () => `expected \`${expected}\` to not equal \`${actual}\``
+        message: () =>
+          `expected \`${C.cssStringRGBA(
+            expected
+          )}\` to not equal \`${C.cssStringRGBA(actual)}\``
       }
     }
 
