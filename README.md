@@ -7,6 +7,8 @@ yarn add ts-colors
 ```
 
 ```typescript
+import * as A from 'fp-ts/Array'
+import { pipe } from 'fp-ts/function'
 import * as C from 'ts-colors/Color'
 import * as S from 'ts-colors/Scale'
 import * as X11 from 'ts-colors/X11'
