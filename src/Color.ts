@@ -316,7 +316,7 @@ export const fromHexString: (hex: string) => O.Option<Color> = (str) => {
   )
 }
 
-const clampInt = clampNumber(0, 0xff0000)
+const clampInt = clampNumber(0, 0xffffff)
 
 const shr =
   (a: number) =>
@@ -536,7 +536,6 @@ export const toXYZ = (c: Color): { x: number; y: number; z: number } => {
  * @since 0.1.0
  * @category deconstructors
  */
-
 export const toLab = (c: Color): { l: number; a: number; b: number } => {
   const cut = Math.pow(6.0 / 29.0, 3.0)
   const f = (t: number) =>
