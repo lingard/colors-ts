@@ -38,15 +38,9 @@ describe('Scale', () => {
 
   test('colors', () => {
     expect(S.sampleColors(0)(scale)).toEqual([])
-    expect(S.sampleColors(1)(scale)).toEqual([red])
-    expect(S.sampleColors(2)(scale)).toEqual([red, yellow])
-    expect(S.sampleColors(5)(S.grayscale)).toEqual([
-      C.black,
-      C.graytone(0.25),
-      C.graytone(0.5),
-      C.graytone(0.75),
-      C.white
-    ])
+    expect(S.sampleColors(1)(scale)[0]).toEqualColor(red)
+    expect(S.sampleColors(2)(scale)[1]).toEqualColor(yellow)
+    expect(S.sampleColors(5)(S.grayscale)[3]).toEqualColor(C.graytone(0.75))
   })
 
   test('grayscale', () => {

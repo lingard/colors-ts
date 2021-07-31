@@ -64,7 +64,7 @@ export const interpolateAngle =
       { from: a, to: b + 360.0 },
       { from: a + 360.0, to: b }
     ]
-    const shortest = pipe(paths, RNEA.sort(ordPath), RNEA.last)
+    const shortest = pipe(paths, RNEA.sort(ordPath), RNEA.head)
 
     return interpolate(fraction)(shortest.from)(shortest.to)
   }
