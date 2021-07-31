@@ -7,19 +7,6 @@ yarn add ts-colors
 ```
 
 ```typescript
-import * as A from 'ts-colors/fp-ts'
-import * as C from 'ts-colors/Color'
-import * as X11 from 'ts-colors/X11'
-
-const background = X11.aquamarine
-const foreground = pipe(
-  X11.aquamarine,
-  C.textColor,
-  C.toHexString
-)
-```
-
-```typescript
 import * as C from 'ts-colors/Color'
 import * as S from 'ts-colors/Scale'
 import * as X11 from 'ts-colors/X11'
