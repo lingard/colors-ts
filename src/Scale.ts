@@ -316,21 +316,28 @@ export const mkSimpleSampler =
     ): C.Color =>
       pipe(
         cs,
-        RA.matchLeft(constant(c1), (head, rest) => {
-          const [c2, right] = head
+        RA.matchLeft(constant(c1), ([c2, right], rest) =>
+          pipe(
+            x,
+            between(left, right),
+            boolean.fold(
+              () => sample(c2, right, rest),
+              () => {
+                if (!between(left, right)(x)) {
+                  return sample(c2, right, rest)
+                }
 
-          if (!between(left, right)(x)) {
-            return sample(c2, right, rest)
-          }
+                if (left === right) {
+                  return c1
+                }
 
-          if (left === right) {
-            return c1
-          }
+                const p = (x - left) / (right - left)
 
-          const p = (x - left) / (right - left)
-
-          return interpolate(c1)(c2)(p)
-        })
+                return interpolate(c1)(c2)(p)
+              }
+            )
+          )
+        )
       )
 
     const stops = pipe(middle, RA.append(colorStop(end, 1.0)))

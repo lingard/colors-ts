@@ -1,7 +1,6 @@
 import * as C from '../src/Color'
 import * as S from '../src/Scale'
 import * as A from 'fp-ts/Array'
-import * as assert from 'assert'
 import { blue, hotpink, magenta, red, yellow } from '../src/X11'
 
 const scale = S.colorScale('hsl', red, [S.colorStop(blue, 0.3)], yellow)
@@ -38,11 +37,10 @@ describe('Scale', () => {
   })
 
   test('colors', () => {
-    // expect(S.sampleColors(0)(scale)).toEqual([])
-    // expect(S.sampleColors(1)(scale)).toEqual([red])
-    // assert.deepStrictEqual(S.sampleColors(2)(scale), [red, yellow])
-    // expect(S.sampleColors(2)(scale)).toEqual([red, yellow])
-    assert.deepStrictEqual(S.sampleColors(5)(S.grayscale), [
+    expect(S.sampleColors(0)(scale)).toEqual([])
+    expect(S.sampleColors(1)(scale)).toEqual([red])
+    expect(S.sampleColors(2)(scale)).toEqual([red, yellow])
+    expect(S.sampleColors(5)(S.grayscale)).toEqual([
       C.black,
       C.graytone(0.25),
       C.graytone(0.5),
