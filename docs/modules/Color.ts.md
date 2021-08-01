@@ -42,6 +42,7 @@ Added in v0.1.0
   - [toXYZ](#toxyz)
 - [instances](#instances)
   - [Eq](#eq)
+  - [OrdBrightness](#ordbrightness)
   - [OrdLuminance](#ordluminance)
   - [Show](#show)
 - [model](#model)
@@ -456,6 +457,16 @@ Added in v0.1.0
   values. This is different from comparing the HSL values (for example,
   HSL has many different representations of black (arbitrary hue and
   saturation values).
+
+## OrdBrightness
+
+**Signature**
+
+```ts
+export declare const OrdBrightness: Ord.Ord<Color>
+```
+
+Added in v0.1.4
 
 ## OrdLuminance
 

@@ -1,6 +1,6 @@
 ---
 title: Scale.ts
-nav_order: 4
+nav_order: 3
 parent: Modules
 ---
 
@@ -424,7 +424,7 @@ can be specified.
 **Signature**
 
 ```ts
-export declare const sampleColors: (scale: ColorScale) => (n: number) => C.Color[]
+export declare const sampleColors: (x: number) => (scale: ColorScale) => C.Color[]
 ```
 
 Added in v0.1.0

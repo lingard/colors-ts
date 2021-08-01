@@ -3,6 +3,23 @@ import * as O from 'fp-ts/Option'
 import * as assert from 'assert'
 
 describe('Int', () => {
+  describe('radix', () => {
+    test('only returns some for valid values', () => {
+      assert.deepStrictEqual(Int.radix(Int.binary), O.some(Int.binary))
+      assert.deepStrictEqual(Int.radix(Int.decimal), O.some(Int.decimal))
+      assert.deepStrictEqual(
+        Int.radix(Int.hexadecimal),
+        O.some(Int.hexadecimal)
+      )
+      assert.deepStrictEqual(Int.radix(Int.octal), O.some(Int.octal))
+      assert.deepStrictEqual(Int.radix(Int.base36), O.some(Int.base36))
+
+      assert.deepStrictEqual(Int.radix(123), O.none)
+      assert.deepStrictEqual(Int.radix(1), O.none)
+      assert.deepStrictEqual(Int.radix(1000), O.none)
+    })
+  })
+
   describe('fromString', () => {
     it('should read integers', () => {
       assert.deepStrictEqual(Int.fromString('0'), O.some(0))
