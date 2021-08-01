@@ -24,13 +24,9 @@ import {
  * @category internal
  */
 const clampNumber = Ord.clamp(number.Ord)
-const maxNumber = Ord.max(number.Ord)
-const minNumber = Ord.min(number.Ord)
 
 const clamp1 = clampNumber(0, 1)
 const clamp255 = clampNumber(0, 255)
-
-const channelRatio = (x: number) => x / 255
 
 const clampRGB = (r: number, g: number, b: number) => [
   clamp255(r),
@@ -100,14 +96,14 @@ export const hsl = (h: number, s: number, l: number): Color => hsla(h, s, l, 1)
  */
 export const rgba = (r: number, g: number, b: number, alpha: number): Color => {
   const [red, green, blue] = clampRGB(r, g, b)
-  const maxChroma = maxNumber(maxNumber(red, green), blue)
-  const minChroma = minNumber(minNumber(red, green), blue)
+  const maxChroma = Math.max(Math.max(red, green), blue)
+  const minChroma = Math.min(Math.min(red, green), blue)
   const chroma = maxChroma - minChroma
 
   const getHue = () => {
-    const r = channelRatio(red)
-    const g = channelRatio(green)
-    const b = channelRatio(blue)
+    const r = red / 255
+    const g = green / 255
+    const b = blue / 255
     const c = chroma / 255
 
     if (c === 0) {
@@ -318,11 +314,6 @@ export const fromHexString: (hex: string) => O.Option<Color> = (str) => {
 
 const clampInt = clampNumber(0, 0xffffff)
 
-const shr =
-  (a: number) =>
-  (b: number): number =>
-    a >> b
-
 /**
  * Converts an integer to a color (RGB representation). `0` is black and
  * `0xffffff` is white. Values outside this range will be clamped.
@@ -340,8 +331,8 @@ const shr =
  */
 export const fromInt = (i: number): Color => {
   const n = clampInt(i)
-  const r = shr(n)(16) & 0xff
-  const g = shr(n)(8) & 0xff
+  const r = (n >> 16) & 0xff
+  const g = (n >> 8) & 0xff
   const b = n & 0xff
 
   return rgb(r, g, b)
@@ -485,7 +476,7 @@ export const toHSVA = ([h, s, l, a]: Color): {
     }
   }
 
-  if (s === 0 && l === 0) {
+  if (s === 0 && l === 1) {
     return {
       h: hue,
       s: 0.0,
@@ -571,6 +562,8 @@ export const toLCh = (c: Color): { l: number; c: number; h: number } => {
   return { l, c: c2, h }
 }
 
+const hexToString = Int.toStringAs(Int.hexadecimal)
+
 /**
  * @since 0.1.0
  * @category deconstructors
@@ -578,7 +571,7 @@ export const toLCh = (c: Color): { l: number; c: number; h: number } => {
 export const toHexString: (c: Color) => string = (color) => {
   const c = toRGBA(color)
   const toHex = (n: number) => {
-    const repr = Int.toStringAs(Int.hexadecimal)(n)
+    const repr = hexToString(n)
 
     if (repr.length === 1) {
       return `0${repr}`
@@ -597,9 +590,9 @@ export const toHexString: (c: Color) => string = (color) => {
  * @category deconstructors
  */
 export const cssStringHSLA = ([h, s, l, a]: Color): string => {
-  const toString = (n: number) => Math.round(100.0 * n) / 100.0
-  const saturation = `${toString(s * 100.0)}%`
-  const lightness = `${toString(l * 100.0)}%`
+  const round = (n: number) => Math.round(100.0 * n) / 100.0
+  const saturation = `${round(s * 100.0)}%`
+  const lightness = `${round(l * 100.0)}%`
 
   return a == 1.0
     ? `hsl(${h}, ${saturation}, ${lightness})`
@@ -817,9 +810,9 @@ export const luminance: (color: Color) => number = (c): number => {
 export const contrast =
   (c1: Color) =>
   (c2: Color): number => {
+    const o = 0.05
     const l1 = luminance(c1)
     const l2 = luminance(c2)
-    const o = 0.05
 
     return l1 > l2 ? (l1 + o) / (l2 + o) : (l2 + o) / (l1 + o)
   }
@@ -841,7 +834,7 @@ export const isLight = (c: Color): boolean => brightness(c) > 0.5
 export const isReadable =
   (c1: Color) =>
   (c2: Color): boolean =>
-    contrast(c1)(c2) > 4.5
+    pipe(c2, contrast(c1), (c) => c > 4.5)
 
 /**
  * Return a readable foreground text color (either `black` or `white`) for a
@@ -892,15 +885,15 @@ export const Eq: Equals.Eq<Color> = {
  * @category instances
  * @since 0.1.0
  */
-export const OrdLuminance: Ord.Ord<Color> = {
-  equals: Eq.equals,
-  compare: (a, b) => {
-    const la = luminance(a)
-    const lb = luminance(b)
+export const OrdLuminance: Ord.Ord<Color> = Ord.contramap(luminance)(number.Ord)
 
-    return number.Ord.compare(la, lb)
-  }
-}
+/**
+ * @category instances
+ * @since 0.1.4
+ */
+export const OrdBrightness: Ord.Ord<Color> = Ord.contramap(brightness)(
+  number.Ord
+)
 
 /**
  * @category instances
