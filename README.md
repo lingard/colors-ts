@@ -1,5 +1,3 @@
-WIP
-
 typescript port of [https://github.com/sharkdp/purescript-colors](https://github.com/sharkdp/purescript-colors)
 
 ```sh
