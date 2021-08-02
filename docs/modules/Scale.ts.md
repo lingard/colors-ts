@@ -110,7 +110,7 @@ Extract the color out of a ColorStop
 **Signature**
 
 ```ts
-export declare const stopColor: ([c]: ColorStop) => C.Color
+export declare const stopColor: (s: ColorStop) => C.Color
 ```
 
 Added in v0.1.0
@@ -122,7 +122,7 @@ Extract the ratio out of a ColorStop
 **Signature**
 
 ```ts
-export declare const stopRatio: ([, r]: ColorStop) => Ratio
+export declare const stopRatio: (s: ColorStop) => Ratio
 ```
 
 Added in v0.1.0
@@ -134,7 +134,7 @@ Extract the colors of a ColorScale to an array
 **Signature**
 
 ```ts
-export declare const toArray: ([, stops]: ColorScale) => C.Color[]
+export declare const toArray: (s: ColorScale) => C.Color[]
 ```
 
 Added in v0.1.0
@@ -201,7 +201,7 @@ Add a stop to a color scale.
 **Signature**
 
 ```ts
-export declare const addScaleStop: (c: C.Color, r: number) => ([mode, s]: ColorScale) => ColorScale
+export declare const addScaleStop: (c: C.Color, r: number) => (s: ColorScale) => ColorScale
 ```
 
 Added in v0.1.0
@@ -253,9 +253,7 @@ color of the second color scale.
 **Signature**
 
 ```ts
-export declare const combineColorStops: (
-  x: number
-) => ([aStart, aMiddle, aEnd]: ColorStops) => ([bStart, bMiddle, bEnd]: ColorStops) => ColorStops
+export declare const combineColorStops: (x: number) => (a: ColorStops) => (b: ColorStops) => ColorStops
 ```
 
 **Example**
@@ -282,9 +280,7 @@ If we want the color at `x` to be blue, `combineStops' epsilon (x + epsilon)` co
 **Signature**
 
 ```ts
-export declare const combineStops: (
-  epsilon: number
-) => (x: number) => ([aStart, aMiddle, aEnd]: ColorStops) => ([bStart, bMiddle, bEnd]: ColorStops) => ColorStops
+export declare const combineStops: (e: number) => (x: number) => (a: ColorStops) => (b: ColorStops) => ColorStops
 ```
 
 **Example**
@@ -329,7 +325,7 @@ gradient in the specified color space.
 **Signature**
 
 ```ts
-export declare const cssColorStops: ([space, stops]: ColorScale) => string
+export declare const cssColorStops: (s: ColorScale) => string
 ```
 
 Added in v0.1.0
@@ -371,9 +367,7 @@ number is larger than 1, the color at 1 is returned.
 **Signature**
 
 ```ts
-export declare const mkSimpleSampler: (
-  interpolate: C.Interpolator
-) => ([start, middle, end]: ColorStops) => (x: number) => C.Color
+export declare const mkSimpleSampler: (i: C.Interpolator) => (s: ColorStops) => (x: number) => C.Color
 ```
 
 Added in v0.1.0
@@ -386,7 +380,7 @@ stop. The first argument is the position of the color stop.
 **Signature**
 
 ```ts
-export declare const modify: (f: (i: number, c: C.Color) => C.Color) => ([start, middle, end]: ColorStops) => ColorStops
+export declare const modify: (f: (i: number, c: C.Color) => C.Color) => (s: ColorStops) => ColorStops
 ```
 
 Added in v0.1.0
@@ -411,7 +405,7 @@ interpolating between its colors (see `mix` and `mkSimpleSampler`).
 **Signature**
 
 ```ts
-export declare const sample: ([mode, scale]: ColorScale) => (x: number) => C.Color
+export declare const sample: (s: ColorScale) => (x: number) => C.Color
 ```
 
 Added in v0.1.0

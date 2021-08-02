@@ -317,7 +317,7 @@ A CSS representation of the color in the form `hsl(..)` or `hsla(...)`.
 **Signature**
 
 ```ts
-export declare const cssStringHSLA: ([h, s, l, a]: Color) => string
+export declare const cssStringHSLA: (c: Color) => string
 ```
 
 Added in v0.1.0
@@ -342,7 +342,7 @@ Convert a `Color` to its Hue, Saturation, Lightness and Alpha values. See
 **Signature**
 
 ```ts
-export declare const toHSLA: ([h, s, l, a]: Color) => { h: number; s: number; l: number; a: number }
+export declare const toHSLA: (c: Color) => { h: number; s: number; l: number; a: number }
 ```
 
 Added in v0.1.0
@@ -355,7 +355,7 @@ Convert a `Color` to its Hue, Saturation, Value and Alpha values. See
 **Signature**
 
 ```ts
-export declare const toHSVA: ([h, s, l, a]: Color) => { h: number; s: number; v: number; a: number }
+export declare const toHSVA: (c: Color) => { h: number; s: number; v: number; a: number }
 ```
 
 Added in v0.1.0
@@ -551,7 +551,7 @@ Get the complementary color (hue rotated by 180°).
 **Signature**
 
 ```ts
-export declare const complementary: ([h, s, l, a]: Color) => Color
+export declare const complementary: (c: Color) => Color
 ```
 
 Added in v0.1.0
@@ -651,7 +651,7 @@ darkened.
 **Signature**
 
 ```ts
-export declare const lighten: (f: number) => ([h, s, l, a]: Color) => Color
+export declare const lighten: (f: number) => (c: Color) => Color
 ```
 
 Added in v0.1.0
@@ -739,7 +739,7 @@ Rotate the hue of a `Color` by a certain angle (in degrees).
 **Signature**
 
 ```ts
-export declare const rotateHue: (angle: number) => ([h, s, l, a]: Color) => Color
+export declare const rotateHue: (angle: number) => (c: Color) => Color
 ```
 
 Added in v0.1.0
@@ -753,7 +753,7 @@ negative, the color is desaturated.
 **Signature**
 
 ```ts
-export declare const saturate: (f: number) => ([h, s, l, a]: Color) => Color
+export declare const saturate: (f: number) => (c: Color) => Color
 ```
 
 Added in v0.1.0
