@@ -76,7 +76,7 @@ export const colorStops = (
   l: C.Color,
   m: ColorStop[],
   r: C.Color
-): ColorStops => [l, m, r]
+): ColorStops => [l, RA.sort(OrdColorStop)(m), r]
 
 /**
  * Create a color scale. The color space is used for interpolation between
@@ -117,6 +117,8 @@ export const stopRatio: (s: ColorStop) => Ratio = ([, r]) => r
  * @since 0.1.0
  */
 export const stopColor: (s: ColorStop) => C.Color = ([c]) => c
+
+const OrdColorStop: Ord.Ord<ColorStop> = Ord.contramap(stopRatio)(number.Ord)
 
 /**
  * Extract the colors of a ColorScale to an array
@@ -246,8 +248,8 @@ export const uniformScale =
 const insertBy =
   <A>({ compare }: Ord.Ord<A>) =>
   (a: A) =>
-  (bs: ReadonlyArray<A>) => {
-    return pipe(
+  (bs: ReadonlyArray<A>) =>
+    pipe(
       bs,
       RA.findIndex((b) => compare(a, b) === 1),
       O.fold(
@@ -255,14 +257,6 @@ const insertBy =
         (i) => RA.unsafeInsertAt(i, a, bs)
       )
     )
-  }
-
-const OrdColorStop = Ord.fromCompare((a: ColorStop, b: ColorStop) => {
-  const ra = stopRatio(a)
-  const rb = stopRatio(b)
-
-  return number.Ord.compare(ra, rb)
-})
 
 const insertByRatio = insertBy(OrdColorStop)
 
@@ -301,6 +295,7 @@ const between = Ord.between(number.Ord)
  * number is larger than 1, the color at 1 is returned.
  *
  * @since 0.1.0
+ * @internal
  */
 export const mkSimpleSampler: (
   i: C.Interpolator
@@ -420,15 +415,16 @@ export const modify: (
  *
  * @since 0.1.0
  */
-export const spectrum = (): ColorScale => {
-  const end = C.hsl(0.0, 1.0, 0.5)
-  const stops = pipe(
-    A.range(1, 35),
-    A.map((i) => colorStop(C.hsl(10.0 * i, 1.0, 0.5), i / 36.0))
-  )
-
-  return colorScale('hsl', end, stops, end)
-}
+export const spectrum = pipe(
+  {
+    end: C.hsl(0.0, 1.0, 0.5),
+    stops: pipe(
+      A.range(1, 35),
+      A.map((i) => colorStop(C.hsl(10.0 * i, 1.0, 0.5), i / 36.0))
+    )
+  },
+  ({ end, stops }) => colorScale('hsl', end, stops, end)
+)
 
 /**
  * A perceptually-uniform, diverging color scale from blue to red, similar to
@@ -436,13 +432,14 @@ export const spectrum = (): ColorScale => {
  *
  * @since 0.1.0
  */
-export const blueToRed = (): ColorScale => {
-  const gray = C.fromInt(0xf7f7f7)
-  const red = C.fromInt(0xb2182b)
-  const blue = C.fromInt(0x2166ac)
-
-  return uniformScale(A.Foldable)('Lab')(blue, [gray], red)
-}
+export const blueToRed = pipe(
+  {
+    gray: C.fromInt(0xf7f7f7),
+    red: C.fromInt(0xb2182b),
+    blue: C.fromInt(0x2166ac)
+  },
+  ({ red, gray, blue }) => uniformScale(A.Foldable)('Lab')(blue, [gray], red)
+)
 
 /**
  * A perceptually-uniform, multi-hue color scale from yellow to red, similar
@@ -450,13 +447,15 @@ export const blueToRed = (): ColorScale => {
  *
  * @since 0.1.0
  */
-export const yellowToRed = (): ColorScale => {
-  const yellow = C.fromInt(0xffffcc)
-  const orange = C.fromInt(0xfd8d3c)
-  const red = C.fromInt(0x800026)
-
-  return uniformScale(A.Foldable)('Lab')(yellow, [orange], red)
-}
+export const yellowToRed = pipe(
+  {
+    yellow: C.fromInt(0xffffcc),
+    orange: C.fromInt(0xfd8d3c),
+    red: C.fromInt(0x800026)
+  },
+  ({ yellow, orange, red }) =>
+    uniformScale(A.Foldable)('Lab')(yellow, [orange], red)
+)
 
 /**
  * A color scale that represents 'hot' colors.
@@ -487,9 +486,11 @@ export const cool = colorScale(
  * missing colors and `ColorStops` itself.
  *
  * @since 0.1.0
+ * @internal
  */
 export const minColorStops =
-  (n: number, sampler: (stops: ColorStops) => (n: number) => C.Color) =>
+  (sampler: (stops: ColorStops) => (n: number) => C.Color) =>
+  (n: number) =>
   (stops: ColorStops): ColorStops => {
     if (n === 0) {
       return stops
@@ -552,6 +553,7 @@ export const cssColorStops: (s: ColorScale) => string = ([space, stops]) => {
 
   const interpolate = C.mix(space)
   const sample = mkSimpleSampler(interpolate)
+  const sampleSteps = minColorStops(sample)
 
-  return pipe(stops, minColorStops(10, sample), cssColorStopsRGB)
+  return pipe(stops, sampleSteps(10), cssColorStopsRGB)
 }

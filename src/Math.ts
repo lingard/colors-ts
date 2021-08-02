@@ -38,7 +38,7 @@ export type Path = {
   to: number
 }
 
-export const dist = ({ from, to }: Path): number => Math.abs(to - from)
+const dist = ({ from, to }: Path): number => Math.abs(to - from)
 
 export const ordPath: Ord.Ord<Path> = Ord.fromCompare((a, b) => {
   const da = dist(a)

@@ -13,6 +13,7 @@ export type BlendMode = 'multiply' | 'screen' | 'overlay'
 /**
  * Blend two RGB channel values (numbers between 0.0 and 1.0).
  *
+ * @internal
  * @since 0.1.0
  */
 export const blendChannel =

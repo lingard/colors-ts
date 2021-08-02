@@ -59,7 +59,7 @@ export const radix = (n: Int): O.Option<Radix> =>
  *
  * @since 0.1.0
  */
-export const fromStringAs: (r: Radix) => (s: string) => O.Option<Radix> = (
+export const fromStringAs: (r: Radix) => (s: string) => O.Option<number> = (
   radix
 ) => {
   let digits

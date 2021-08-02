@@ -74,11 +74,19 @@ describe('Int', () => {
         O.some(-2147483648)
       )
       assert.deepStrictEqual(Int.fromStringAs(Int.binary)('10'), O.some(2))
-
-      // assert $ fromStringAs (unsafePartial $ fromJust $ radix 3) "10" == Just 3
-      // assert $ fromStringAs (unsafePartial $ fromJust $ radix 11) "10" == Just 11
-      // assert $ fromStringAs (unsafePartial $ fromJust $ radix 12) "10" == Just 12
-      // assert $ fromStringAs (unsafePartial $ fromJust $ radix 36) "10" == Just 36
+      assert.deepStrictEqual(Int.fromStringAs(3 as Int.Radix)('10'), O.some(3))
+      assert.deepStrictEqual(
+        Int.fromStringAs(11 as Int.Radix)('10'),
+        O.some(11)
+      )
+      assert.deepStrictEqual(
+        Int.fromStringAs(12 as Int.Radix)('10'),
+        O.some(12)
+      )
+      assert.deepStrictEqual(
+        Int.fromStringAs(36 as Int.Radix)('10'),
+        O.some(36)
+      )
     })
 
     it('should fail on unknown digits', () => {
