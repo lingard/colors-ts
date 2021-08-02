@@ -108,7 +108,7 @@ export const grayscale = colorScale('rgb', C.black, [], C.white)
  * @category deconstructors
  * @since 0.1.0
  */
-export const stopRatio = ([, r]: ColorStop): Ratio => r
+export const stopRatio: (s: ColorStop) => Ratio = ([, r]) => r
 
 /**
  * Extract the color out of a ColorStop
@@ -116,7 +116,7 @@ export const stopRatio = ([, r]: ColorStop): Ratio => r
  * @category deconstructors
  * @since 0.1.0
  */
-export const stopColor = ([c]: ColorStop): C.Color => c
+export const stopColor: (s: ColorStop) => C.Color = ([c]) => c
 
 /**
  * Extract the colors of a ColorScale to an array
@@ -124,7 +124,7 @@ export const stopColor = ([c]: ColorStop): C.Color => c
  * @category deconstructors
  * @since 0.1.0
  */
-export const toArray = ([, stops]: ColorScale): C.Color[] =>
+export const toArray: (s: ColorScale) => C.Color[] = ([, stops]) =>
   pipe(stops, ([s, m, e]) => pipe(m, RA.map(stopColor), (m) => [s, ...m, e]))
 
 /**
@@ -145,11 +145,13 @@ export const toArray = ([, stops]: ColorScale): C.Color[] =>
  *
  * @since 0.1.0
  */
-export const combineStops =
-  (epsilon: number) =>
-  (x: number) =>
-  ([aStart, aMiddle, aEnd]: ColorStops) =>
-  ([bStart, bMiddle, bEnd]: ColorStops): ColorStops => {
+export const combineStops: (
+  e: number
+) => (x: number) => (a: ColorStops) => (b: ColorStops) => ColorStops =
+  (epsilon) =>
+  (x) =>
+  ([aStart, aMiddle, aEnd]) =>
+  ([bStart, bMiddle, bEnd]) => {
     const startStops = pipe(
       aMiddle,
       RA.map((stop) =>
@@ -283,9 +285,12 @@ export const addStop =
  *
  * @since 0.1.0
  */
-export const addScaleStop =
-  (c: C.Color, r: number) =>
-  ([mode, s]: ColorScale): ColorScale =>
+export const addScaleStop: (
+  c: C.Color,
+  r: number
+) => (s: ColorScale) => ColorScale =
+  (c, r) =>
+  ([mode, s]) =>
     pipe(s, addStop(c, r), ([s, m, e]) => colorScale(mode, s, RA.toArray(m), e))
 
 const between = Ord.between(number.Ord)
@@ -297,10 +302,12 @@ const between = Ord.between(number.Ord)
  *
  * @since 0.1.0
  */
-export const mkSimpleSampler =
-  (interpolate: C.Interpolator) =>
-  ([start, middle, end]: ColorStops) =>
-  (x: number): C.Color => {
+export const mkSimpleSampler: (
+  i: C.Interpolator
+) => (s: ColorStops) => (x: number) => C.Color =
+  (interpolate) =>
+  ([start, middle, end]) =>
+  (x) => {
     if (x < 0) {
       return start
     }
@@ -351,8 +358,10 @@ export const mkSimpleSampler =
  *
  * @since 0.1.0
  */
-export const sample = ([mode, scale]: ColorScale): ((x: number) => C.Color) =>
-  pipe(scale, mkSimpleSampler(C.mix(mode)))
+export const sample: (s: ColorScale) => (x: number) => C.Color = ([
+  mode,
+  scale
+]) => pipe(scale, mkSimpleSampler(C.mix(mode)))
 
 /**
  * Takes a sampling function and returns a list of colors that is sampled via
@@ -391,9 +400,11 @@ export const sampleColors =
  *
  * @since 0.1.0
  */
-export const modify =
-  (f: (i: number, c: C.Color) => C.Color) =>
-  ([start, middle, end]: ColorStops): ColorStops =>
+export const modify: (
+  f: (i: number, c: C.Color) => C.Color
+) => (s: ColorStops) => ColorStops =
+  (f) =>
+  ([start, middle, end]) =>
     colorStops(
       f(0, start),
       pipe(
@@ -506,7 +517,7 @@ const intercalateAS = intercalate(string.Monoid, RA.Foldable)
 /**
  * Underling function of `cssColorStops`.
  */
-const cssColorStopsRGB = ([s, m, e]: ColorStops): string => {
+const cssColorStopsRGB: (s: ColorStops) => string = ([s, m, e]) => {
   if (RA.isEmpty(m)) {
     return `${C.cssStringHSLA(s)}, ${C.cssStringHSLA(e)}`
   }
@@ -534,7 +545,7 @@ const cssColorStopsRGB = ([s, m, e]: ColorStops): string => {
  *
  * @since 0.1.0
  */
-export const cssColorStops = ([space, stops]: ColorScale): string => {
+export const cssColorStops: (s: ColorScale) => string = ([space, stops]) => {
   if (space === 'rgb') {
     return cssColorStopsRGB(stops)
   }

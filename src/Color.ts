@@ -437,7 +437,12 @@ export const toRGBA: (c: Color) => {
  * @since 0.1.0
  * @category deconstructors
  */
-export const toHSLA = ([h, s, l, a]: Color): {
+export const toHSLA: (c: Color) => {
+  h: number
+  s: number
+  l: number
+  a: number
+} = ([h, s, l, a]): {
   h: number
   s: number
   l: number
@@ -456,7 +461,12 @@ export const toHSLA = ([h, s, l, a]: Color): {
  * @since 0.1.0
  * @category deconstructors
  */
-export const toHSVA = ([h, s, l, a]: Color): {
+export const toHSVA: (c: Color) => {
+  h: number
+  s: number
+  v: number
+  a: number
+} = ([h, s, l, a]): {
   h: number
   s: number
   v: number
@@ -503,7 +513,7 @@ export const toHSVA = ([h, s, l, a]: Color): {
  * @since 0.1.0
  * @category deconstructors
  */
-export const toXYZ = (c: Color): { x: number; y: number; z: number } => {
+export const toXYZ: (c: Color) => { x: number; y: number; z: number } = (c) => {
   const finv = (c: number) =>
     c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
 
@@ -527,7 +537,7 @@ export const toXYZ = (c: Color): { x: number; y: number; z: number } => {
  * @since 0.1.0
  * @category deconstructors
  */
-export const toLab = (c: Color): { l: number; a: number; b: number } => {
+export const toLab: (c: Color) => { l: number; a: number; b: number } = (c) => {
   const cut = Math.pow(6.0 / 29.0, 3.0)
   const f = (t: number) =>
     t > cut
@@ -551,7 +561,7 @@ export const toLab = (c: Color): { l: number; a: number; b: number } => {
  * @since 0.1.0
  * @category deconstructors
  */
-export const toLCh = (c: Color): { l: number; c: number; h: number } => {
+export const toLCh: (c: Color) => { l: number; c: number; h: number } = (c) => {
   const rec = toLab(c)
   const l = rec.l
   const a = rec.a
@@ -589,7 +599,7 @@ export const toHexString: (c: Color) => string = (color) => {
  * @since 0.1.0
  * @category deconstructors
  */
-export const cssStringHSLA = ([h, s, l, a]: Color): string => {
+export const cssStringHSLA: (c: Color) => string = ([h, s, l, a]) => {
   const round = (n: number) => Math.round(100.0 * n) / 100.0
   const saturation = `${round(s * 100.0)}%`
   const lightness = `${round(l * 100.0)}%`
@@ -617,9 +627,9 @@ export const cssStringRGBA = (c: Color): string =>
  *
  * @since 0.1.0
  */
-export const rotateHue =
+export const rotateHue: (angle: number) => (c: Color) => Color =
   (angle: number) =>
-  ([h, s, l, a]: Color): Color =>
+  ([h, s, l, a]) =>
     hsla(h + angle, s, l, a)
 
 /**
@@ -636,9 +646,9 @@ export const complementary = rotateHue(180)
  *
  * @since 0.1.0
  */
-export const lighten =
-  (f: number) =>
-  ([h, s, l, a]: Color): Color =>
+export const lighten: (f: number) => (c: Color) => Color =
+  (f) =>
+  ([h, s, l, a]) =>
     hsla(h, s, l + f, a)
 
 /**
@@ -657,9 +667,9 @@ export const darken = (f: number): Endomorphism<Color> => lighten(-f)
  *
  * @since 0.1.0
  */
-export const saturate =
-  (f: number) =>
-  ([h, s, l, a]: Color): Color =>
+export const saturate: (f: number) => (c: Color) => Color =
+  (f) =>
+  ([h, s, l, a]) =>
     hsla(h, s + f, l, a)
 
 /**
