@@ -419,6 +419,7 @@ export const simpleSampler: (
       pipe(
         cs,
         RA.matchLeft(constant(c1), ([c2, right], rest) => {
+          /* istanbul ignore next */
           if (left === right) {
             return c1
           }
