@@ -13,3 +13,7 @@ export const ColorStopArbitrary = fc
 export const ColorStopsArbitrary = fc
   .tuple(ColorArbitrary, fc.array(ColorStopArbitrary), ColorArbitrary)
   .map(([s, m, e]) => S.colorStops(s, m, e))
+
+export const ColorScaleArbitrary = fc
+  .tuple(ColorArbitrary, fc.array(ColorStopArbitrary), ColorArbitrary)
+  .map(([s, m, e]) => S.colorScale('rgb', s, m, e))

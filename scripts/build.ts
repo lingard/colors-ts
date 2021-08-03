@@ -17,6 +17,7 @@ export const copyPackageJson: Build<void> = (C) =>
     C.readFile(PKG),
     TE.chain((s) => TE.fromEither(pipe(J.parse(s), E.mapLeft(E.toError)))),
     TE.map((json) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const clone = Object.assign({}, json as any)
 
       delete clone.scripts

@@ -15,15 +15,6 @@ export const modPos =
 
 export const square = (x: number): number => Math.pow(x, 2.0)
 
-export const between =
-  (a: number, b: number) =>
-  (n: number): boolean => {
-    const min = Math.min(a, b)
-    const max = Math.max(a, b)
-
-    return n > min && n < max
-  }
-
 /**
  * Linearly interpolate between two values.
  */

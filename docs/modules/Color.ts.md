@@ -32,6 +32,7 @@ Added in v0.1.0
 - [deconstructors](#deconstructors)
   - [cssStringHSLA](#cssstringhsla)
   - [cssStringRGBA](#cssstringrgba)
+  - [hue](#hue)
   - [toHSLA](#tohsla)
   - [toHSVA](#tohsva)
   - [toHexString](#tohexstring)
@@ -333,6 +334,18 @@ export declare const cssStringRGBA: (c: Color) => string
 ```
 
 Added in v0.1.0
+
+## hue
+
+Get the color hue in the interval [0, 360].
+
+**Signature**
+
+```ts
+export declare const hue: (c: Color) => number
+```
+
+Added in v0.1.4
 
 ## toHSLA
 

@@ -24,3 +24,14 @@ describe('Blending', () => {
     })
   })
 })
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    interface Matchers<R> {
+      toEqualColor(actual: C.Color): R
+      toNotEqualColor(actual: C.Color): R
+      toAlmostEqualColor(atual: C.Color): R
+    }
+  }
+}

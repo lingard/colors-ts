@@ -18,33 +18,35 @@ Added in v0.1.0
   - [colorStops](#colorstops)
   - [grayscale](#grayscale)
 - [deconstructors](#deconstructors)
+  - [length](#length)
   - [stopColor](#stopcolor)
   - [stopRatio](#stopratio)
-  - [toArray](#toarray)
+  - [toReadonlyArray](#toreadonlyarray)
+  - [~~toArray~~](#toarray)
 - [model](#model)
   - [ColorScale (type alias)](#colorscale-type-alias)
   - [ColorStop (type alias)](#colorstop-type-alias)
   - [ColorStops (type alias)](#colorstops-type-alias)
   - [Ratio (type alias)](#ratio-type-alias)
 - [utils](#utils)
-  - [addScaleStop](#addscalestop)
   - [addStop](#addstop)
   - [blueToRed](#bluetored)
-  - [colors](#colors)
+  - [changeMode](#changemode)
+  - [combine](#combine)
   - [combineColorStops](#combinecolorstops)
   - [combineStops](#combinestops)
   - [cool](#cool)
   - [cssColorStops](#csscolorstops)
+  - [first](#first)
   - [hot](#hot)
-  - [minColorStops](#mincolorstops)
-  - [mkSimpleSampler](#mksimplesampler)
+  - [last](#last)
+  - [mode](#mode)
   - [modify](#modify)
-  - [reverseStops](#reversestops)
+  - [reverse](#reverse)
   - [sample](#sample)
   - [sampleColors](#samplecolors)
   - [spectrum](#spectrum)
   - [uniformScale](#uniformscale)
-  - [uniformStops](#uniformstops)
   - [yellowToRed](#yellowtored)
 
 ---
@@ -61,7 +63,12 @@ different stops. The first `Color` defines the left end (color at ratio
 **Signature**
 
 ```ts
-export declare const colorScale: (space: C.ColorSpace, l: C.Color, m: ColorStop[], r: C.Color) => ColorScale
+export declare const colorScale: (
+  space: C.ColorSpace,
+  l: C.Color,
+  m: ReadonlyArray<readonly [C.Color, number]>,
+  r: C.Color
+) => ColorScale
 ```
 
 Added in v0.1.0
@@ -84,7 +91,7 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export declare const colorStops: (l: C.Color, m: ColorStop[], r: C.Color) => ColorStops
+export declare const colorStops: (l: C.Color, m: ReadonlyArray<readonly [C.Color, number]>, r: C.Color) => ColorStops
 ```
 
 Added in v0.1.0
@@ -102,6 +109,18 @@ export declare const grayscale: ColorScale
 Added in v0.1.0
 
 # deconstructors
+
+## length
+
+returns the amount of color stops in the scale
+
+**Signature**
+
+```ts
+export declare const length: (s: ColorScale) => number
+```
+
+Added in v0.1.4
 
 ## stopColor
 
@@ -127,14 +146,26 @@ export declare const stopRatio: (s: ColorStop) => Ratio
 
 Added in v0.1.0
 
-## toArray
+## toReadonlyArray
 
-Extract the colors of a ColorScale to an array
+transform a scale to an ReadonlyArray of ColorStops
 
 **Signature**
 
 ```ts
-export declare const toArray: (s: ColorScale) => C.Color[]
+export declare const toReadonlyArray: (s: ColorScale) => ReadonlyArray<ColorStop>
+```
+
+Added in v0.1.4
+
+## ~~toArray~~
+
+transform a scale to an Array of ColorStops
+
+**Signature**
+
+```ts
+export declare const toArray: (s: ColorScale) => ColorStop[]
 ```
 
 Added in v0.1.0
@@ -194,26 +225,14 @@ Added in v0.1.0
 
 # utils
 
-## addScaleStop
+## addStop
 
 Add a stop to a color scale.
 
 **Signature**
 
 ```ts
-export declare const addScaleStop: (c: C.Color, r: number) => (s: ColorScale) => ColorScale
-```
-
-Added in v0.1.0
-
-## addStop
-
-Add a stop to a list of `ColorStops`.
-
-**Signature**
-
-```ts
-export declare const addStop: (c: C.Color, r: number) => ([s, m, e]: ColorStops) => ColorStops
+export declare const addStop: (c: C.Color, r: number) => (s: ColorScale) => ColorScale
 ```
 
 Added in v0.1.0
@@ -226,23 +245,36 @@ the ColorBrewer scale 'RdBu'.
 **Signature**
 
 ```ts
-export declare const blueToRed: () => ColorScale
+export declare const blueToRed: ColorScale
 ```
 
 Added in v0.1.0
 
-## colors
+## changeMode
 
-Takes a sampling function and returns a list of colors that is sampled via
-that function. The number of colors can be specified.
+change the `ColorSpace` mode of the scale
 
 **Signature**
 
 ```ts
-export declare const colors: (f: (x: number) => C.Color) => (n: number) => C.Color[]
+export declare const changeMode: (space: C.ColorSpace) => (scale: ColorScale) => ColorScale
 ```
 
-Added in v0.1.0
+Added in v0.1.4
+
+## combine
+
+Concatenates two color scales. The first argument specifies the transition point as
+a number between zero and one. The color right at the transition point is the first
+color of the second color scale.
+
+**Signature**
+
+```ts
+export declare const combine: (e: number) => (a: ColorScale) => (b: ColorScale) => ColorScale
+```
+
+Added in v0.1.4
 
 ## combineColorStops
 
@@ -273,9 +305,6 @@ Added in v0.1.0
 
 Like `combineColorStops`, but the width of the "transition zone" can be specified as the
 first argument.
-
-Here, the color at `x` will be orange and color at `x - epsilon` will be blue.
-If we want the color at `x` to be blue, `combineStops' epsilon (x + epsilon)` could be used.
 
 **Signature**
 
@@ -330,6 +359,18 @@ export declare const cssColorStops: (s: ColorScale) => string
 
 Added in v0.1.0
 
+## first
+
+get the first color of the scale
+
+**Signature**
+
+```ts
+export declare const first: (c: ColorScale) => C.Color
+```
+
+Added in v0.1.4
+
 ## hot
 
 A color scale that represents 'hot' colors.
@@ -342,65 +383,59 @@ export declare const hot: ColorScale
 
 Added in v0.1.0
 
-## minColorStops
+## last
 
-Takes number of stops `ColorStops` should contain, function to generate
-missing colors and `ColorStops` itself.
-
-**Signature**
-
-```ts
-export declare const minColorStops: (
-  n: number,
-  sampler: (stops: ColorStops) => (n: number) => C.Color
-) => (stops: ColorStops) => ColorStops
-```
-
-Added in v0.1.0
-
-## mkSimpleSampler
-
-Get the color at a specific point on the color scale (number between 0 and
-1). If the number is smaller than 0, the color at 0 is returned. If the
-number is larger than 1, the color at 1 is returned.
+get the last color of the scale
 
 **Signature**
 
 ```ts
-export declare const mkSimpleSampler: (i: C.Interpolator) => (s: ColorStops) => (x: number) => C.Color
+export declare const last: (c: ColorScale) => C.Color
 ```
 
-Added in v0.1.0
+Added in v0.1.4
+
+## mode
+
+get the `ColorSpace` mode of the scale
+
+**Signature**
+
+```ts
+export declare const mode: (s: ColorScale) => C.ColorSpace
+```
+
+Added in v0.1.4
 
 ## modify
 
-Modify a list of `ColorStops` by applying the given function to each color
-stop. The first argument is the position of the color stop.
+Modify the colors of a scale by applying the given function to each
+color stop. The first argument is the position of the color stop.
 
 **Signature**
 
 ```ts
-export declare const modify: (f: (i: number, c: C.Color) => C.Color) => (s: ColorStops) => ColorStops
+export declare const modify: (f: (i: number, c: C.Color) => C.Color) => (s: ColorScale) => ColorScale
 ```
 
-Added in v0.1.0
+Added in v0.1.4
 
-## reverseStops
+## reverse
 
-Takes `ColorStops` and returns reverses it
+Reverses a color scale
 
 **Signature**
 
 ```ts
-export declare const reverseStops: Endomorphism<ColorStops>
+export declare const reverse: Endomorphism<ColorScale>
 ```
 
-Added in v0.1.0
+Added in v0.1.4
 
 ## sample
 
 Get the color at a specific point on the color scale by linearly
-interpolating between its colors (see `mix` and `mkSimpleSampler`).
+interpolating between its colors.
 
 **Signature**
 
@@ -430,7 +465,7 @@ A spectrum of fully saturated hues (HSL color space).
 **Signature**
 
 ```ts
-export declare const spectrum: () => ColorScale
+export declare const spectrum: ColorScale
 ```
 
 Added in v0.1.0
@@ -443,44 +478,7 @@ spaced on the scale.
 **Signature**
 
 ```ts
-export declare const uniformScale: <
-  F extends
-    | 'Option'
-    | 'ReadonlyRecord'
-    | 'Eq'
-    | 'Ord'
-    | 'ReadonlyNonEmptyArray'
-    | 'ReadonlyArray'
-    | 'NonEmptyArray'
-    | 'Array'
->(
-  F: Foldable1<F>
-) => (mode: C.ColorSpace) => (s: C.Color, m: Kind<F, C.Color>, e: C.Color) => ColorScale
-```
-
-Added in v0.1.0
-
-## uniformStops
-
-Create `ColorStops` from a list of colors such that they will be evenly
-spaced on the scale.
-
-**Signature**
-
-```ts
-export declare const uniformStops: <
-  F extends
-    | 'Option'
-    | 'ReadonlyRecord'
-    | 'Eq'
-    | 'Ord'
-    | 'ReadonlyNonEmptyArray'
-    | 'ReadonlyArray'
-    | 'NonEmptyArray'
-    | 'Array'
->(
-  F: Foldable1<F>
-) => (s: C.Color, m: Kind<F, C.Color>, e: C.Color) => ColorStops
+export declare const uniformScale: (mode: C.ColorSpace) => (s: C.Color, m: C.Color[], e: C.Color) => ColorScale
 ```
 
 Added in v0.1.0
@@ -493,7 +491,7 @@ to the ColorBrewer scale YlOrRd.
 **Signature**
 
 ```ts
-export declare const yellowToRed: () => ColorScale
+export declare const yellowToRed: ColorScale
 ```
 
 Added in v0.1.0
