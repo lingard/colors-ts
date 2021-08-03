@@ -18,6 +18,7 @@ import {
   red,
   yellow
 } from '../src/X11'
+import { ColorArbitrary } from './utils'
 
 describe('Color', () => {
   test('Eq instance', () => {
@@ -107,7 +108,7 @@ describe('Color', () => {
     }
 
     fc.assert(
-      fc.property(fc.integer(), fc.integer(), fc.integer(), (h, s, l) =>
+      fc.property(fc.integer(0, 1000), fc.integer(), fc.integer(), (h, s, l) =>
         hslRoundtrip(h, s, l)
       )
     )
@@ -134,11 +135,14 @@ describe('Color', () => {
     const hsvRoundtrip = (h: number, s: number, l: number, a: number) => {
       const ai = C.hsla(h, s, l, a)
       const bi = C.hsva(h, s, l, a)
+      const ci = C.hsv(h, s, l)
       const ao = pipe(C.toHSVA(ai), ({ h, s, v, a }) => C.hsva(h, s, v, a))
       const bo = pipe(C.toHSVA(bi), ({ h, s, v, a }) => C.hsva(h, s, v, a))
+      const co = pipe(C.toHSVA(ci), ({ h, s, v }) => C.hsv(h, s, v))
 
       expect(ai).toAlmostEqualColor(ao)
       expect(bi).toAlmostEqualColor(bo)
+      expect(ci).toAlmostEqualColor(co)
     }
 
     fc.assert(
@@ -213,15 +217,14 @@ describe('Color', () => {
     expect(C.cssStringRGBA(C.rgba(42, 103, 255, 0.3))).toEqual(
       'rgba(42, 103, 255, 0.3)'
     )
+    expect(C.cssStringRGBA(C.rgba(42, 103, 255, 1))).toEqual(
+      'rgb(42, 103, 255)'
+    )
   })
 
   test('graytone', () => {
     expect(C.graytone(0.0)).toEqualColor(C.black)
     expect(C.graytone(1.0)).toEqualColor(C.white)
-  })
-
-  test('rotateHue', () => {
-    expect(C.rotateHue(123)(C.black)).toEqualColor(C.black)
   })
 
   test('complementary', () => {
@@ -253,6 +256,9 @@ describe('Color', () => {
 
   test('mix', () => {
     expect(C.mix('rgb')(red)(blue)(0.5)).toEqualColor(C.fromInt(0x800080))
+    expect(C.mix('hsl')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xff00ff))
+    expect(C.mix('LCh')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xfb0080))
+    expect(C.mix('Lab')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xca0088))
   })
 
   test('mixRGB', () => {
@@ -284,6 +290,16 @@ describe('Color', () => {
     expect(Math.round(1000.0 * C.contrast(pink)(purple))).toEqual(6124)
   })
 
+  test('isReadable', () => {
+    fc.assert(
+      fc.property(ColorArbitrary, ColorArbitrary, (a, b) => {
+        const contrast = C.contrast(a)(b)
+
+        return contrast > 4.5 === C.isReadable(a)(b)
+      })
+    )
+  })
+
   test('textColor', () => {
     expect(C.textColor(C.graytone(0.6))).toEqual(C.black)
     expect(C.textColor(C.graytone(0.4))).toEqual(C.white)
@@ -294,6 +310,25 @@ describe('Color', () => {
     expect(
       pipe(C.distance(C.rgb(50, 100, 200))(C.rgb(200, 10, 0)), Math.round)
     ).toEqual(123)
+  })
+
+  test('hue', () => {
+    expect(C.hue(C.hsl(0, 0, 0))).toEqual(0)
+    expect(C.hue(C.hsl(180, 0, 0))).toEqual(180)
+    expect(C.hue(C.hsl(360, 0, 0))).toEqual(360)
+  })
+
+  test('rotateHue', () => {
+    const rotate = (d: number) => pipe(C.hsl(0, 0, 0), C.rotateHue(d), C.hue)
+
+    expect(C.rotateHue(123)(C.black)).toEqualColor(C.black)
+
+    expect(rotate(180)).toEqual(180)
+    expect(rotate(-180)).toEqual(180)
+  })
+
+  test('Show', () => {
+    expect(C.Show.show(C.rgba(0, 0, 0, 1))).toEqual('0, 0, 0, 1')
   })
 })
 

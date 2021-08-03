@@ -1,17 +1,11 @@
 module.exports = {
   preset: 'ts-jest',
-  globals: {
-    'ts-jest': {
-      diagnostics: false
-    }
-  },
   testEnvironment: 'node',
   collectCoverage: true,
-  collectCoverageFrom: ['src/**/*.ts', '!src/WriterT.ts'],
+  collectCoverageFrom: ['src/**/*.ts', '!src/X11.ts'],
   transform: {
     '^.+\\.tsx?$': 'ts-jest'
   },
-  testRegex: 'test',
   moduleFileExtensions: ['ts', 'js'],
   coverageThreshold: {
     global: {
@@ -21,6 +15,5 @@ module.exports = {
       statements: 100
     }
   },
-  modulePathIgnorePatterns: ['util'],
   setupFilesAfterEnv: ['./jest.setup.ts']
 }

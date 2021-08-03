@@ -9,9 +9,8 @@ import * as O from 'fp-ts/Option'
 import * as boolean from 'fp-ts/boolean'
 import * as string from 'fp-ts/string'
 import * as C from './Color'
-import { constant, Endomorphism, pipe } from 'fp-ts/function'
-import { Foldable1, intercalate, toReadonlyArray } from 'fp-ts/Foldable'
-import { Kind, URIS } from 'fp-ts/HKT'
+import { constant, Endomorphism, flow, pipe } from 'fp-ts/function'
+import { intercalate } from 'fp-ts/Foldable'
 import { red, yellow } from './X11'
 
 interface RatioBrand {
@@ -74,9 +73,17 @@ export const colorStop = (c: C.Color, r: number): ColorStop => [c, ratio(r)]
  */
 export const colorStops = (
   l: C.Color,
-  m: ColorStop[],
+  m: ReadonlyArray<readonly [C.Color, number]>,
   r: C.Color
-): ColorStops => [l, m, r]
+): ColorStops =>
+  pipe(
+    m,
+    // clamp color stop ratios
+    RA.map(([c, r]) => colorStop(c, r)),
+    // sort stops by ratio
+    RA.sort(OrdColorStop),
+    (m) => [l, m, r]
+  )
 
 /**
  * Create a color scale. The color space is used for interpolation between
@@ -90,7 +97,7 @@ export const colorStops = (
 export const colorScale = (
   space: C.ColorSpace,
   l: C.Color,
-  m: ColorStop[],
+  m: ReadonlyArray<readonly [C.Color, number]>,
   r: C.Color
 ): ColorScale => [space, colorStops(l, m, r)]
 
@@ -118,21 +125,88 @@ export const stopRatio: (s: ColorStop) => Ratio = ([, r]) => r
  */
 export const stopColor: (s: ColorStop) => C.Color = ([c]) => c
 
+const OrdColorStop: Ord.Ord<ColorStop> = Ord.contramap(stopRatio)(number.Ord)
+
 /**
- * Extract the colors of a ColorScale to an array
+ * get the first color of the scale
+ *
+ * @since 0.1.4
+ */
+export const first: (c: ColorScale) => C.Color = ([, s]) => s[0]
+
+/**
+ * get the last color of the scale
+ *
+ * @since 0.1.4
+ */
+export const last: (c: ColorScale) => C.Color = ([, s]) => s[2]
+
+/**
+ * get the middle colors of the scale
+ *
+ * @since 0.1.4
+ * @internal
+ */
+export const middle: (c: ColorScale) => readonly ColorStop[] = ([, s]) => s[1]
+
+/**
+ * get the `ColorSpace` mode of the scale
+ *
+ * @since 0.1.4
+ */
+export const mode: (s: ColorScale) => C.ColorSpace = ([s]) => s
+
+/**
+ * change the `ColorSpace` mode of the scale
+ *
+ * @since 0.1.4
+ */
+export const changeMode: (
+  space: C.ColorSpace
+) => (scale: ColorScale) => ColorScale =
+  (space) =>
+  ([, stops]) =>
+    colorScale(space, ...stops)
+
+/**
+ * transform a scale to an ReadonlyArray of ColorStops
+ *
+ * @category deconstructors
+ * @since 0.1.4
+ */
+export const toReadonlyArray: (s: ColorScale) => ReadonlyArray<ColorStop> = (
+  scale
+) =>
+  pipe(
+    middle(scale),
+    RA.prepend(colorStop(first(scale), 0)),
+    RA.append(colorStop(last(scale), 1))
+  )
+
+/**
+ * transform a scale to an Array of ColorStops
  *
  * @category deconstructors
  * @since 0.1.0
+ * @deprecated use toReadonlyArray
  */
-export const toArray: (s: ColorScale) => C.Color[] = ([, stops]) =>
-  pipe(stops, ([s, m, e]) => pipe(m, RA.map(stopColor), (m) => [s, ...m, e]))
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const toArray: (s: ColorScale) => ColorStop[] = toReadonlyArray as any
+
+/**
+ * returns the amount of color stops in the scale
+ *
+ * @category deconstructors
+ * @since 0.1.4
+ */
+export const length: (s: ColorScale) => number = flow(
+  toReadonlyArray,
+  (x) => x.length
+)
 
 /**
  * Like `combineColorStops`, but the width of the "transition zone" can be specified as the
  * first argument.
- *
- * Here, the color at `x` will be orange and color at `x - epsilon` will be blue.
- * If we want the color at `x` to be blue, `combineStops' epsilon (x + epsilon)` could be used.
  *
  * @example
  *
@@ -168,17 +242,21 @@ export const combineStops: (
       RA.map((stop) =>
         pipe(
           stopRatio(stop),
-          (ratio) => ratio / (1.0 / (1.0 - x)),
+          (ratio) => x + ratio / (1.0 / (1.0 - x)),
           (ratio) => colorStop(stopColor(stop), ratio)
         )
       )
     )
-    const stops = RA.flatten([startStops, midStops, endStops])
+    const stops = [...startStops, ...midStops, ...endStops]
 
-    return colorStops(aStart, stops as ColorStop[], bEnd)
+    return colorStops(aStart, stops, bEnd)
   }
 
-const epsilon = 0.000001
+/**
+ * @internal
+ * @since 0.1.4
+ */
+export const epsilon = 0.000001
 
 /**
  * Concatenates two color scales. The first argument specifies the transition point as
@@ -199,9 +277,25 @@ const epsilon = 0.000001
 export const combineColorStops = combineStops(epsilon)
 
 /**
- * Takes `ColorStops` and returns reverses it
+ * Concatenates two color scales. The first argument specifies the transition point as
+ * a number between zero and one. The color right at the transition point is the first
+ * color of the second color scale.
+ *
+ * @since 0.1.4
+ */
+export const combine: (
+  e: number
+) => (a: ColorScale) => (b: ColorScale) => ColorScale = (e) => (a) => (b) => {
+  const c = combineColorStops(e)
+
+  return pipe(b[1], c(a[1]), (s) => colorScale(a[0], ...s))
+}
+
+/**
+ * reverses `ColorStops`
  *
  * @since 0.1.0
+ * @internal
  */
 export const reverseStops: Endomorphism<ColorStops> = ([start, stops, end]) =>
   pipe(
@@ -212,22 +306,32 @@ export const reverseStops: Endomorphism<ColorStops> = ([start, stops, end]) =>
   )
 
 /**
+ * Reverses a color scale
+ *
+ * @since 0.1.4
+ */
+export const reverse: Endomorphism<ColorScale> = ([scale, stops]) =>
+  colorScale(scale, ...reverseStops(stops))
+
+/**
  * Create `ColorStops` from a list of colors such that they will be evenly
  * spaced on the scale.
  *
  * @since 0.1.0
+ * @internal
  */
-export const uniformStops =
-  <F extends URIS>(F: Foldable1<F>) =>
-  (s: C.Color, m: Kind<F, C.Color>, e: C.Color): ColorStops => {
-    const cs = toReadonlyArray(F)(m)
-    const length = cs.length
-    const n = 1 + length
-    const makeStop = (i: number, c: C.Color) => colorStop(c, i / n)
-    const stops = RA.zipWith(RA.range(1, n), cs, makeStop)
+export const uniformStops = (
+  s: C.Color,
+  m: C.Color[],
+  e: C.Color
+): ColorStops => {
+  const length = m.length
+  const n = 1 + length
+  const makeStop = (i: number, c: C.Color) => colorStop(c, i / n)
+  const stops = A.zipWith(A.range(1, n), m, makeStop)
 
-    return colorStops(s, stops as ColorStop[], e)
-  }
+  return colorStops(s, stops, e)
+}
 
 /**
  * Create a uniform color scale from a list of colors that will be evenly
@@ -236,18 +340,15 @@ export const uniformStops =
  * @since 0.1.0
  */
 export const uniformScale =
-  <F extends URIS>(F: Foldable1<F>) =>
   (mode: C.ColorSpace) =>
-  (s: C.Color, m: Kind<F, C.Color>, e: C.Color): ColorScale =>
-    pipe(uniformStops(F)(s, m, e), ([s, m, e]) =>
-      colorScale(mode, s, m as ColorStop[], e)
-    )
+  (s: C.Color, m: C.Color[], e: C.Color): ColorScale =>
+    pipe(uniformStops(s, m, e), (stops) => colorScale(mode, ...stops))
 
 const insertBy =
   <A>({ compare }: Ord.Ord<A>) =>
   (a: A) =>
-  (bs: ReadonlyArray<A>) => {
-    return pipe(
+  (bs: ReadonlyArray<A>) =>
+    pipe(
       bs,
       RA.findIndex((b) => compare(a, b) === 1),
       O.fold(
@@ -255,14 +356,6 @@ const insertBy =
         (i) => RA.unsafeInsertAt(i, a, bs)
       )
     )
-  }
-
-const OrdColorStop = Ord.fromCompare((a: ColorStop, b: ColorStop) => {
-  const ra = stopRatio(a)
-  const rb = stopRatio(b)
-
-  return number.Ord.compare(ra, rb)
-})
 
 const insertByRatio = insertBy(OrdColorStop)
 
@@ -270,8 +363,9 @@ const insertByRatio = insertBy(OrdColorStop)
  * Add a stop to a list of `ColorStops`.
  *
  * @since 0.1.0
+ * @internal
  */
-export const addStop =
+export const insertStop =
   (c: C.Color, r: number) =>
   ([s, m, e]: ColorStops): ColorStops =>
     pipe(
@@ -285,13 +379,13 @@ export const addStop =
  *
  * @since 0.1.0
  */
-export const addScaleStop: (
-  c: C.Color,
-  r: number
-) => (s: ColorScale) => ColorScale =
-  (c, r) =>
-  ([mode, s]) =>
-    pipe(s, addStop(c, r), ([s, m, e]) => colorScale(mode, s, RA.toArray(m), e))
+export const addStop: (c: C.Color, r: number) => (s: ColorScale) => ColorScale =
+
+    (c, r) =>
+    ([mode, s]) =>
+      pipe(s, insertStop(c, r), ([s, m, e]) =>
+        colorScale(mode, s, RA.toArray(m), e)
+      )
 
 const between = Ord.between(number.Ord)
 
@@ -301,8 +395,9 @@ const between = Ord.between(number.Ord)
  * number is larger than 1, the color at 1 is returned.
  *
  * @since 0.1.0
+ * @internal
  */
-export const mkSimpleSampler: (
+export const simpleSampler: (
   i: C.Interpolator
 ) => (s: ColorStops) => (x: number) => C.Color =
   (interpolate) =>
@@ -323,28 +418,24 @@ export const mkSimpleSampler: (
     ): C.Color =>
       pipe(
         cs,
-        RA.matchLeft(constant(c1), ([c2, right], rest) =>
-          pipe(
+        RA.matchLeft(constant(c1), ([c2, right], rest) => {
+          if (left === right) {
+            return c1
+          }
+
+          return pipe(
             x,
             between(left, right),
             boolean.fold(
               () => sample(c2, right, rest),
               () => {
-                if (!between(left, right)(x)) {
-                  return sample(c2, right, rest)
-                }
-
-                if (left === right) {
-                  return c1
-                }
-
                 const p = (x - left) / (right - left)
 
                 return interpolate(c1)(c2)(p)
               }
             )
           )
-        )
+        })
       )
 
     const stops = pipe(middle, RA.append(colorStop(end, 1.0)))
@@ -354,22 +445,23 @@ export const mkSimpleSampler: (
 
 /**
  * Get the color at a specific point on the color scale by linearly
- * interpolating between its colors (see `mix` and `mkSimpleSampler`).
+ * interpolating between its colors.
  *
  * @since 0.1.0
  */
 export const sample: (s: ColorScale) => (x: number) => C.Color = ([
   mode,
   scale
-]) => pipe(scale, mkSimpleSampler(C.mix(mode)))
+]) => pipe(scale, simpleSampler(C.mix(mode)))
 
 /**
  * Takes a sampling function and returns a list of colors that is sampled via
  * that function. The number of colors can be specified.
  *
  * @since 0.1.0
+ * @internal
  */
-export const colors =
+export const makeColors =
   (f: (x: number) => C.Color) =>
   (n: number): C.Color[] => {
     if (n === 0) {
@@ -392,15 +484,16 @@ export const colors =
 export const sampleColors =
   (x: number) =>
   (scale: ColorScale): C.Color[] =>
-    pipe(x, colors(sample(scale)))
+    pipe(x, makeColors(sample(scale)))
 
 /**
  * Modify a list of  `ColorStops` by applying the given function to each color
  * stop. The first argument is the position of the color stop.
  *
  * @since 0.1.0
+ * @internal
  */
-export const modify: (
+export const modifyColorStops: (
   f: (i: number, c: C.Color) => C.Color
 ) => (s: ColorStops) => ColorStops =
   (f) =>
@@ -416,19 +509,33 @@ export const modify: (
     )
 
 /**
+ * Modify the colors of a scale by applying the given function to each
+ * color stop. The first argument is the position of the color stop.
+ *
+ * @since 0.1.4
+ */
+export const modify: (
+  f: (i: number, c: C.Color) => C.Color
+) => (s: ColorScale) => ColorScale =
+  (f) =>
+  ([space, stops]) =>
+    pipe(stops, modifyColorStops(f), (stops) => colorScale(space, ...stops))
+
+/**
  * A spectrum of fully saturated hues (HSL color space).
  *
  * @since 0.1.0
  */
-export const spectrum = (): ColorScale => {
-  const end = C.hsl(0.0, 1.0, 0.5)
-  const stops = pipe(
-    A.range(1, 35),
-    A.map((i) => colorStop(C.hsl(10.0 * i, 1.0, 0.5), i / 36.0))
-  )
-
-  return colorScale('hsl', end, stops, end)
-}
+export const spectrum = pipe(
+  {
+    end: C.hsl(0.0, 1.0, 0.5),
+    stops: pipe(
+      A.range(1, 35),
+      A.map((i) => colorStop(C.hsl(10.0 * i, 1.0, 0.5), i / 36.0))
+    )
+  },
+  ({ end, stops }) => colorScale('hsl', end, stops, end)
+)
 
 /**
  * A perceptually-uniform, diverging color scale from blue to red, similar to
@@ -436,13 +543,14 @@ export const spectrum = (): ColorScale => {
  *
  * @since 0.1.0
  */
-export const blueToRed = (): ColorScale => {
-  const gray = C.fromInt(0xf7f7f7)
-  const red = C.fromInt(0xb2182b)
-  const blue = C.fromInt(0x2166ac)
-
-  return uniformScale(A.Foldable)('Lab')(blue, [gray], red)
-}
+export const blueToRed = pipe(
+  {
+    gray: C.fromInt(0xf7f7f7),
+    red: C.fromInt(0xb2182b),
+    blue: C.fromInt(0x2166ac)
+  },
+  ({ red, gray, blue }) => uniformScale('Lab')(blue, [gray], red)
+)
 
 /**
  * A perceptually-uniform, multi-hue color scale from yellow to red, similar
@@ -450,13 +558,14 @@ export const blueToRed = (): ColorScale => {
  *
  * @since 0.1.0
  */
-export const yellowToRed = (): ColorScale => {
-  const yellow = C.fromInt(0xffffcc)
-  const orange = C.fromInt(0xfd8d3c)
-  const red = C.fromInt(0x800026)
-
-  return uniformScale(A.Foldable)('Lab')(yellow, [orange], red)
-}
+export const yellowToRed = pipe(
+  {
+    yellow: C.fromInt(0xffffcc),
+    orange: C.fromInt(0xfd8d3c),
+    red: C.fromInt(0x800026)
+  },
+  ({ yellow, orange, red }) => uniformScale('Lab')(yellow, [orange], red)
+)
 
 /**
  * A color scale that represents 'hot' colors.
@@ -487,28 +596,33 @@ export const cool = colorScale(
  * missing colors and `ColorStops` itself.
  *
  * @since 0.1.0
+ * @internal
  */
 export const minColorStops =
-  (n: number, sampler: (stops: ColorStops) => (n: number) => C.Color) =>
+  (sampler: (stops: ColorStops) => (n: number) => C.Color) =>
+  (n: number) =>
   (stops: ColorStops): ColorStops => {
     if (n === 0) {
       return stops
     }
 
     const additionalStops = pipe(
-      n <= 2,
+      n > 2,
       boolean.fold(constant([]), () =>
         pipe(
           A.range(1, n - 1),
-          A.map((step) => ratio(step / n)),
-          A.map((frac) => colorStop(sampler(stops)(frac), frac))
+          A.map((step) => {
+            const frac = ratio(step / n)
+
+            return pipe(frac, sampler(stops), (c) => colorStop(c, frac))
+          })
         )
       )
     )
 
     return pipe(
       additionalStops,
-      A.reduce(stops, (stops, [c, r]) => pipe(stops, addStop(c, r)))
+      A.reduce(stops, (stops, [c, r]) => pipe(stops, insertStop(c, r)))
     )
   }
 
@@ -551,7 +665,8 @@ export const cssColorStops: (s: ColorScale) => string = ([space, stops]) => {
   }
 
   const interpolate = C.mix(space)
-  const sample = mkSimpleSampler(interpolate)
+  const sample = simpleSampler(interpolate)
+  const sampleSteps = minColorStops(sample)
 
-  return pipe(stops, minColorStops(10, sample), cssColorStopsRGB)
+  return pipe(stops, sampleSteps(10), cssColorStopsRGB)
 }

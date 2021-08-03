@@ -16,7 +16,6 @@ Added in v0.1.0
   - [BlendMode (type alias)](#blendmode-type-alias)
 - [utils](#utils)
   - [blend](#blend)
-  - [blendChannel](#blendchannel)
   - [multiply](#multiply)
   - [overlay](#overlay)
   - [screen](#screen)
@@ -47,18 +46,6 @@ alpha value is calculated as arithmetic mean.
 
 ```ts
 export declare const blend: (mode: BlendMode) => (a: Color) => (b: Color) => Color
-```
-
-Added in v0.1.0
-
-## blendChannel
-
-Blend two RGB channel values (numbers between 0.0 and 1.0).
-
-**Signature**
-
-```ts
-export declare const blendChannel: (mode: BlendMode) => (a: number) => (b: number) => number
 ```
 
 Added in v0.1.0

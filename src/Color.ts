@@ -6,11 +6,11 @@ import * as Equals from 'fp-ts/Eq'
 import * as S from 'fp-ts/Show'
 import * as O from 'fp-ts/Option'
 import * as number from 'fp-ts/number'
+import { sequenceT } from 'fp-ts/Apply'
 import { Endomorphism, pipe } from 'fp-ts/function'
 
 import { clipHue, Hue } from './Hue'
 import * as Int from './Int'
-import { sequenceT } from 'fp-ts/Apply'
 import {
   deg2rad,
   interpolate,
@@ -361,6 +361,14 @@ export const white = hsl(0.0, 0.0, 1.0)
  * @since 0.1.0
  */
 export const graytone = (l: number): Color => hsl(0.0, 0.0, l)
+
+/**
+ * Get the color hue in the interval [0, 360].
+ *
+ * @since 0.1.4
+ * @category deconstructors
+ */
+export const hue: (c: Color) => number = ([h]) => clipHue(h)
 
 /**
  * Convert a `Color` to its red, green, blue and alpha values. All values
@@ -910,5 +918,6 @@ export const OrdBrightness: Ord.Ord<Color> = Ord.contramap(brightness)(
  * @since 0.1.0
  */
 export const Show: S.Show<Color> = {
-  show: ([r, g, b, a]) => `${r}, ${g}, ${b}, ${a}`
+  show: (c: Color) =>
+    pipe(toRGBA(c), ({ r, g, b, a }) => `${r}, ${g}, ${b}, ${a}`)
 }
