@@ -327,8 +327,9 @@ export const uniformStops = (
 ): ColorStops => {
   const length = m.length
   const n = 1 + length
-  const makeStop = (i: number, c: C.Color) => colorStop(c, i / n)
-  const stops = A.zipWith(A.range(1, n), m, makeStop)
+  const stops = A.zipWith(A.range(1, n), m, (i: number, c: C.Color) =>
+    colorStop(c, i / n)
+  )
 
   return colorStops(s, stops, e)
 }
@@ -629,9 +630,6 @@ export const minColorStops =
 
 const intercalateAS = intercalate(string.Monoid, RA.Foldable)
 
-/**
- * Underling function of `cssColorStops`.
- */
 const cssColorStopsRGB: (s: ColorStops) => string = ([s, m, e]) => {
   if (RA.isEmpty(m)) {
     return `${C.cssStringHSLA(s)}, ${C.cssStringHSLA(e)}`
