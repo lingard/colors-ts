@@ -1,7 +1,12 @@
+/**
+ * @since 0.1.5
+ */
+import { pipe } from 'fp-ts/function'
+import * as struct from 'fp-ts/struct'
 import { Hsla } from './Hsla'
 import { LCh } from './LCh'
 import * as XYZ from './XYZ'
-import { deg2rad } from './Math'
+import { deg2rad, interpolate } from './Math'
 
 /**
  * Represents a color using the Lab color system
@@ -10,14 +15,12 @@ import { deg2rad } from './Math'
  * @since 1.0.0
  */
 export interface Lab {
-  readonly _tag: 'Lab'
   readonly l: number
   readonly a: number
   readonly b: number
 }
 
 export const lab = (l: number, a: number, b: number): Lab => ({
-  _tag: 'Lab',
   l,
   a,
   b
@@ -60,3 +63,30 @@ export const fromLCh = ({ l, c, h }: LCh): Lab => {
 
   return lab(l, a, b)
 }
+
+/**
+ * @since 0.1.5
+ */
+export const evolve: <F extends { [K in keyof Lab]: (a: Lab[K]) => number }>(
+  transformations: F
+) => (c: Lab) => Lab = (t) => (c) =>
+  pipe(c, struct.evolve(t), ({ l, a, b }) => lab(l, a, b))
+
+/**
+ * @since 0.1.5
+ */
+export const mix =
+  (ratio: number) =>
+  (a: Lab) =>
+  (b: Lab): Lab => {
+    const i = interpolate(ratio)
+
+    return pipe(
+      b,
+      evolve({
+        l: i(a.l),
+        a: i(a.a),
+        b: i(a.b)
+      })
+    )
+  }

@@ -1,7 +1,12 @@
+/**
+ * @since 0.1.5
+ */
+import { pipe } from 'fp-ts/function'
+import * as struct from 'fp-ts/struct'
 import { Hsla } from './Hsla'
 import { clipHue } from './Hue'
 import * as Lab from './Lab'
-import { rad2deg } from './Math'
+import { interpolate, interpolateAngle, rad2deg } from './Math'
 
 /**
  * A color in the CIE LCh color space.
@@ -13,7 +18,6 @@ import { rad2deg } from './Math'
  * @since 0.1.5
  */
 export interface LCh {
-  readonly _tag: 'LCh'
   readonly l: number
   readonly c: number
   readonly h: number
@@ -24,7 +28,6 @@ export interface LCh {
  * @category constructors
  */
 export const lch = (l: number, c: number, h: number): LCh => ({
-  _tag: 'LCh',
   l,
   c,
   h
@@ -44,3 +47,31 @@ export const fromHsla: (c: Hsla) => LCh = (c) => {
 
   return lch(l, c2, h)
 }
+
+/**
+ * @since 0.1.5
+ */
+export const evolve: <F extends { [K in keyof LCh]: (a: LCh[K]) => number }>(
+  transformations: F
+) => (c: LCh) => LCh = (t) => (c) =>
+  pipe(c, struct.evolve(t), ({ l, c, h }) => lch(l, c, h))
+
+/**
+ * @since 0.1.5
+ */
+export const mix =
+  (ratio: number) =>
+  (a: LCh) =>
+  (b: LCh): LCh => {
+    const i = interpolate(ratio)
+    const ia = interpolateAngle(ratio)
+
+    return pipe(
+      b,
+      evolve({
+        l: i(a.l),
+        c: i(a.c),
+        h: ia(a.h)
+      })
+    )
+  }

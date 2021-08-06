@@ -9,8 +9,6 @@ import { UnitInterval, unitInterval } from './UnitInterval'
  * @since 1.0.0
  */
 export interface Hsva {
-  readonly _tag: 'hsva'
-
   /**
    * A number between `0` and `360` representing the hue of the color in degrees.
    */
@@ -36,7 +34,6 @@ export interface Hsva {
  * @category constructors
  */
 export const hsva = (h: number, s: number, v: number, a: number): Hsva => ({
-  _tag: 'hsva',
   h: clipHue(h),
   s: unitInterval(s),
   v: unitInterval(v),

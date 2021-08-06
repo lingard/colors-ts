@@ -3,7 +3,7 @@
  */
 import { absurd } from 'fp-ts/function'
 import { Color, rgba2 } from './Color'
-import { fromHSLA2 } from './Rgba'
+import { normalizedFromHsla } from './Rgba'
 
 /**
  * @category model
@@ -55,8 +55,8 @@ export const blend =
   (mode: BlendMode) =>
   (a: Color) =>
   (b: Color): Color => {
-    const ac = fromHSLA2(a)
-    const bc = fromHSLA2(b)
+    const ac = normalizedFromHsla(a)
+    const bc = normalizedFromHsla(b)
     const bcm = blendChannel(mode)
 
     return rgba2(

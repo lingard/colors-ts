@@ -16,7 +16,6 @@ import * as Rgba from './Rgba'
  * @since 0.1.5
  */
 export interface XYZ {
-  readonly _tag: 'XYZ'
   readonly x: number
   readonly y: number
   readonly z: number
@@ -27,7 +26,6 @@ export interface XYZ {
  * @since 0.1.5
  */
 export const xyz = (x: number, y: number, z: number): XYZ => ({
-  _tag: 'XYZ',
   x,
   y,
   z
@@ -41,7 +39,7 @@ export const fromHsla = (c: Hsla): XYZ => {
   const finv = (c: number) =>
     c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
 
-  const rec = Rgba.fromHSLA2(c)
+  const rec = Rgba.normalizedFromHsla(c)
   const r = finv(rec.r)
   const g = finv(rec.g)
   const b = finv(rec.b)

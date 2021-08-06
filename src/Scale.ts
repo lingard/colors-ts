@@ -9,7 +9,8 @@ import * as O from 'fp-ts/Option'
 import * as boolean from 'fp-ts/boolean'
 import * as string from 'fp-ts/string'
 import * as C from './Color'
-import { constant, Endomorphism, flow, pipe } from 'fp-ts/function'
+import { constant, flow, pipe } from 'fp-ts/function'
+import { Endomorphism } from 'fp-ts/Endomorphism'
 import { intercalate } from 'fp-ts/Foldable'
 import { red, yellow } from './X11'
 import { unitInterval, UnitInterval } from './UnitInterval'
@@ -644,15 +645,14 @@ const intercalateAS = intercalate(string.Monoid, RA.Foldable)
 
 const cssColorStopsRGB: (s: ColorStops) => string = ([s, m, e]) => {
   if (RA.isEmpty(m)) {
-    return `${C.cssStringHSLA(s)}, ${C.cssStringHSLA(e)}`
+    return `${C.toCSSHsla(s)}, ${C.toCSSHsla(e)}`
   }
 
   const percentage = (r: number) => `${r * 100.0}%`
-  const toString = ([c, r]: ColorStop) =>
-    `${C.cssStringHSLA(c)} ${percentage(r)}`
+  const toString = ([c, r]: ColorStop) => `${C.toCSSHsla(c)} ${percentage(r)}`
   const stops = pipe(m, RA.map(toString), (stop) => intercalateAS(', ', stop))
 
-  return `${C.cssStringHSLA(s)}, ${stops}, ${C.cssStringHSLA(e)}`
+  return `${C.toCSSHsla(s)}, ${stops}, ${C.toCSSHsla(e)}`
 }
 
 /**

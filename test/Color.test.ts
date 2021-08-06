@@ -200,26 +200,24 @@ describe('Color', () => {
     hexRoundtrip(162.4, 0.779, 0.447)
   })
 
-  test('cssStringHSLA', () => {
-    expect(C.cssStringHSLA(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
+  test('toCSSHsla', () => {
+    expect(C.toCSSHsla(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
       'hsla(120.1, 33%, 55%, 0.3)'
     )
-    expect(C.cssStringHSLA(C.hsla(120.1, 0.332, 0.549, 1.0))).toEqual(
+    expect(C.toCSSHsla(C.hsla(120.1, 0.332, 0.549, 1.0))).toEqual(
       'hsl(120.1, 33.2%, 54.9%)'
     )
-    expect(C.cssStringHSLA(C.hsla(360.0, 0.332, 0.549, 1.0))).toEqual(
+    expect(C.toCSSHsla(C.hsla(360.0, 0.332, 0.549, 1.0))).toEqual(
       'hsl(360, 33.2%, 54.9%)'
     )
   })
 
-  test('cssStringRGBA', () => {
-    expect(C.cssStringRGBA(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
-    expect(C.cssStringRGBA(C.rgba(42, 103, 255, 0.3))).toEqual(
+  test('toCSSRgba', () => {
+    expect(C.toCSSRgba(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
+    expect(C.toCSSRgba(C.rgba(42, 103, 255, 0.3))).toEqual(
       'rgba(42, 103, 255, 0.3)'
     )
-    expect(C.cssStringRGBA(C.rgba(42, 103, 255, 1))).toEqual(
-      'rgb(42, 103, 255)'
-    )
+    expect(C.toCSSRgba(C.rgba(42, 103, 255, 1))).toEqual('rgb(42, 103, 255)')
   })
 
   test('graytone', () => {
@@ -328,7 +326,9 @@ describe('Color', () => {
   })
 
   test('Show', () => {
-    expect(C.Show.show(C.rgba(0, 0, 0, 1))).toEqual('0, 0, 0, 1')
+    expect(C.Show.show(C.rgba(0, 0, 0, 1))).toEqual(
+      '{ r: 0, g: 0, b: 0, a: 1 }'
+    )
   })
 })
 

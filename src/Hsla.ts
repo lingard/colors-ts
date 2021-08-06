@@ -2,22 +2,22 @@
  * @since 0.1.5
  */
 import { flow, pipe } from 'fp-ts/function'
+import * as struct from 'fp-ts/struct'
 import * as Hue from './Hue'
 import { UnitInterval, unitInterval } from './UnitInterval'
 import * as Rgba from './Rgba'
 import { Hsva } from './Hsva'
 import * as XYZ from './XYZ'
 import * as Lab from './Lab'
+import { interpolate, interpolateAngle } from './Math'
 
 /**
  * Represents a color using the HSL cylindrical-coordinate system.
  *
  * @category model
- * @since 1.0.0
+ * @since 0.1.5
  */
 export interface Hsla {
-  readonly _tag: 'hsla'
-
   /**
    * A number between `0` and `360` representing the hue of the color in degrees.
    */
@@ -42,15 +42,22 @@ export interface Hsla {
   readonly a: UnitInterval
 }
 
+/**
+ * @category constructors
+ * @since 0.1.5
+ */
 export const hsla = (h: number, s: number, l: number, a: number): Hsla => ({
-  _tag: 'hsla',
   h: Hue.clipHue(h),
   s: unitInterval(s),
   l: unitInterval(l),
   a: unitInterval(a)
 })
 
-export const fromRgba = (rgba: Rgba.Rgba): Hsla => {
+/**
+ * @category constructors
+ * @since 0.1.5
+ */
+export const fromRgba: (rgba: Rgba.Rgba) => Hsla = (rgba) => {
   const maxChroma = Rgba.maxChroma(rgba)
   const minChroma = Rgba.minChroma(rgba)
   const chroma = Rgba.chroma(rgba)
@@ -63,14 +70,10 @@ export const fromRgba = (rgba: Rgba.Rgba): Hsla => {
 }
 
 /**
- * Create a `Color` from Hue, Saturation, Value and Alpha values. The
- * Hue is given in degrees, as a `Number` between 0.0 and 360.0. Saturation,
- * Value and Alpha are numbers between 0.0 and 1.0.
- *
  * @category constructors
- * @since 0.1.0
+ * @since 0.1.5
  */
-export const fromHsva = ({ h, s, v, a }: Hsva): Hsla => {
+export const fromHsva: (hsva: Hsva) => Hsla = ({ h, s, v, a }) => {
   if (v === 0) {
     return hsla(h, s / (2.0 - s), 0.0, a)
   }
@@ -88,40 +91,74 @@ export const fromHsva = ({ h, s, v, a }: Hsva): Hsla => {
 }
 
 /**
- * Create a `Color` from XYZ coordinates in the CIE 1931 color space. Note
- * that a `Color` always represents a color in the sRGB gamut (colors that
- * can be represented on a typical computer screen) while the XYZ color space
- * is bigger. This function will tend to create fully saturated colors at the
- * edge of the sRGB gamut if the coordinates lie outside the sRGB range.
- *
- * See:
- * - https://en.wikipedia.org/wiki/CIE_1931_color_space
- * - https://en.wikipedia.org/wiki/SRGB
- *
  * @category constructors
- * @since 0.1.0
+ * @since 0.1.5
  */
-export const fromXYZ = ({ x, y, z }: XYZ.XYZ): Hsla => {
-  const f = (c: number) =>
-    c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1.0 / 2.4) - 0.055
-
-  const r = f(3.2406 * x - 1.5372 * y - 0.4986 * z)
-  const g = f(-0.9689 * x + 1.8758 * y + 0.0415 * z)
-  const b = f(0.0557 * x - 0.204 * y + 1.057 * z)
-
-  return pipe(Rgba.rgb(r * 255, g * 255, b * 255), fromRgba)
-}
+export const fromXYZ = flow(Rgba.fromXYZ, fromRgba)
 
 /**
- * Create a `Color` from L, a and b coordinates coordinates in the Lab color
- * space.
- * Note: See documentation for `xyz`. The same restrictions apply here.
- *
- * See: https://en.wikipedia.org/wiki/Lab_color_space
- *
  * @category constructors
- * @since 0.1.0
+ * @since 0.1.5
  */
 export const fromLab = flow(XYZ.fromLab, fromXYZ)
 
+/**
+ * @category constructors
+ * @since 0.1.5
+ */
 export const fromLCh = flow(Lab.fromLCh, fromLab)
+
+/**
+ * Rotate the hue by a certain angle (in degrees).
+ *
+ * @since 0.1.5
+ */
+export const rotateHue: (angle: number) => (c: Hsla) => Hsla =
+  (angle: number) =>
+  ({ h, s, l, a }) =>
+    hsla(h + angle, s, l, a)
+
+/**
+ * @since 0.1.5
+ */
+export const evolve: <F extends { [K in keyof Hsla]: (a: Hsla[K]) => number }>(
+  transformations: F
+) => (c: Hsla) => Hsla = (t) => (c) =>
+  pipe(c, struct.evolve(t), ({ h, s, l, a }) => hsla(h, s, l, a))
+
+/**
+ * @since 0.1.5
+ */
+export const mix =
+  (ratio: number) =>
+  (a: Hsla) =>
+  (b: Hsla): Hsla => {
+    const i = interpolate(ratio)
+    const ia = interpolateAngle(ratio)
+
+    return pipe(
+      b,
+      evolve({
+        h: ia(a.h),
+        s: i(a.s),
+        l: i(a.l),
+        a: i(a.a)
+      })
+    )
+  }
+
+/**
+ * A CSS representation of the color in the form `hsl(..)` or `hsla(...)`.
+ *
+ * @since 0.1.5
+ * @category destructors
+ */
+export const toCSS: (c: Hsla) => string = ({ h, s, l, a }) => {
+  const round = (n: number) => Math.round(100.0 * n) / 100.0
+  const saturation = `${round(s * 100.0)}%`
+  const lightness = `${round(l * 100.0)}%`
+
+  return a == 1.0
+    ? `hsl(${h}, ${saturation}, ${lightness})`
+    : `hsla(${h}, ${saturation}, ${lightness}, ${a})`
+}

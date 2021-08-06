@@ -3,11 +3,12 @@
  */
 import * as Ord from 'fp-ts/Ord'
 import * as Equals from 'fp-ts/Eq'
-import * as S from 'fp-ts/Show'
+import * as Sh from 'fp-ts/Show'
 import * as O from 'fp-ts/Option'
 import * as number from 'fp-ts/number'
 import { sequenceT } from 'fp-ts/Apply'
-import { Endomorphism, flow, pipe } from 'fp-ts/function'
+import { absurd, flow, pipe } from 'fp-ts/function'
+import { Endomorphism } from 'fp-ts/Endomorphism'
 
 import * as Hsla from './Hsla'
 import * as Hsva from './Hsva'
@@ -16,7 +17,7 @@ import * as XYZ from './XYZ'
 import * as Lab from './Lab'
 import * as LCh from './LCh'
 import * as Int from './Int'
-import { interpolate, interpolateAngle, square } from './Math'
+import { square } from './Math'
 
 /**
  * @category model
@@ -85,9 +86,9 @@ export const rgb = (r: number, g: number, b: number): Color => rgba(r, g, b, 1)
  */
 export const rgba2 = (r: number, g: number, b: number, a: number): Color =>
   rgba(
-    Rgba.channelFromUnitInterval(r),
-    Rgba.channelFromUnitInterval(g),
-    Rgba.channelFromUnitInterval(b),
+    Rgba.channelFromInterval(r),
+    Rgba.channelFromInterval(g),
+    Rgba.channelFromInterval(b),
     a
   )
 
@@ -353,43 +354,68 @@ export const toHexString: (c: Color) => string = (color) => {
 }
 
 /**
+ * A CSS representation of the color
+ *
+ * @since 0.1.5
+ * @category destructors
+ */
+export const toCSS: (s: ColorSpace) => (c: Color) => string = (s) => (c) => {
+  switch (s) {
+    case 'hsl': {
+      return Hsla.toCSS(c)
+    }
+
+    case 'Lab':
+    case 'LCh':
+    case 'rgb': {
+      return pipe(Rgba.fromHSLA(c), Rgba.toCSS)
+    }
+
+    default: {
+      return absurd(s)
+    }
+  }
+}
+
+/**
  * A CSS representation of the color in the form `hsl(..)` or `hsla(...)`.
+ *
+ * @since 0.1.5
+ * @category destructors
+ */
+export const toCSSHsla: (c: Color) => string = toCSS('hsl')
+
+/**
+ * Use [toCSSHsla](#toCSSHsla) instead
  *
  * @since 0.1.0
  * @category destructors
+ * @deprecated
  */
-export const cssStringHSLA: (c: Color) => string = ({ h, s, l, a }) => {
-  const round = (n: number) => Math.round(100.0 * n) / 100.0
-  const saturation = `${round(s * 100.0)}%`
-  const lightness = `${round(l * 100.0)}%`
-
-  return a == 1.0
-    ? `hsl(${h}, ${saturation}, ${lightness})`
-    : `hsla(${h}, ${saturation}, ${lightness}, ${a})`
-}
+export const cssStringHSLA: (c: Color) => string = toCSSHsla
 
 /**
  * A CSS representation of the color in the form `rgb(..)` or `rgba(...)`
  *
+ * @since 0.1.5
+ * @category destructors
+ */
+export const toCSSRgba = toCSS('rgb')
+
+/**
+ * Use [toCSSRgba](#toCSSRgba) instead
+ *
  * @since 0.1.0
  * @category destructors
  */
-export const cssStringRGBA = (c: Color): string =>
-  pipe(toRGBA(c), (c) =>
-    c.a === 1.0
-      ? `rgb(${c.r}, ${c.g}, ${c.b})`
-      : `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})`
-  )
+export const cssStringRGBA: (c: Color) => string = toCSSRgba
 
 /**
  * Rotate the hue of a `Color` by a certain angle (in degrees).
  *
  * @since 0.1.0
  */
-export const rotateHue: (angle: number) => (c: Color) => Color =
-  (angle: number) =>
-  ({ h, s, l, a }) =>
-    hsla(h + angle, s, l, a)
+export const rotateHue: (angle: number) => (c: Color) => Color = Hsla.rotateHue
 
 /**
  * Get the complementary color (hue rotated by 180°).
@@ -455,50 +481,39 @@ export const toGray: Endomorphism<Color> = (c) =>
  *
  * @since 0.1.0
  */
-export type Interpolator = (
-  start: Color
-) => (end: Color) => (ratio: number) => Color
+export type Interpolator = (a: Color) => (b: Color) => (ratio: number) => Color
 
 /**
  * Mix two colors by linearly interpolating between them in the RGB color space.
  *
  * @since 0.1.0
  */
-export const mix =
-  (space: ColorSpace): Interpolator =>
-  (c1) =>
-  (c2) =>
-  (ratio) => {
-    const i = interpolate(ratio)
-    const ia = interpolateAngle(ratio)
-
+export const mix: (space: ColorSpace) => Interpolator =
+  (space: ColorSpace) => (a) => (b) => (r) => {
     switch (space) {
       case 'hsl': {
-        const f = toHSLA(c1)
-        const t = toHSLA(c2)
-
-        return hsla(ia(f.h)(t.h), i(f.s)(t.s), i(f.l)(t.l), i(f.a)(t.a))
+        return Hsla.mix(r)(a)(b)
       }
 
       case 'rgb': {
-        const f = Rgba.fromHSLA2(c1)
-        const t = Rgba.fromHSLA2(c2)
+        const f = toRGBA(a)
+        const t = toRGBA(b)
 
-        return rgba2(i(f.r)(t.r), i(f.g)(t.g), i(f.b)(t.b), i(f.a)(t.a))
+        return pipe(Rgba.mix(r)(f)(t), Hsla.fromRgba)
       }
 
       case 'LCh': {
-        const f = toLCh(c1)
-        const t = toLCh(c2)
+        const f = toLCh(a)
+        const t = toLCh(b)
 
-        return lch(i(f.l)(t.l), i(f.c)(t.c), ia(f.h)(t.h))
+        return pipe(LCh.mix(r)(f)(t), Hsla.fromLCh)
       }
 
       case 'Lab': {
-        const f = toLab(c1)
-        const t = toLab(c2)
+        const f = toLab(a)
+        const t = toLab(b)
 
-        return lab(i(f.l)(t.l), i(f.a)(t.a), i(f.b)(t.b))
+        return pipe(Lab.mix(r)(f)(t), Hsla.fromLab)
       }
     }
   }
@@ -538,11 +553,10 @@ export const mixLab: Interpolator = mix('Lab')
  *
  * @since 0.1.0
  */
-export const brightness = (c: Color): number =>
-  pipe(
-    Rgba.fromHSLA2(c),
-    (c) => (299.0 * c.r + 587.0 * c.g + 114.0 * c.b) / 1000.0
-  )
+export const brightness: (c: Color) => number = flow(
+  Rgba.fromHSLA,
+  Rgba.brightness
+)
 
 /**
  * The relative brightness of a color (normalized to 0.0 for darkest black
@@ -552,22 +566,10 @@ export const brightness = (c: Color): number =>
  *
  * @since 0.1.0
  */
-export const luminance: (color: Color) => number = (c): number => {
-  const rgba = Rgba.fromHSLA2(c)
-  const f = (c: number) => {
-    if (c <= 0.03928) {
-      return c / 12.92
-    }
-
-    return Math.pow((c + 0.055) / 1.055, 2.4)
-  }
-
-  const r = f(rgba.r)
-  const g = f(rgba.g)
-  const b = f(rgba.b)
-
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
+export const luminance: (color: Color) => number = flow(
+  Rgba.fromHSLA,
+  Rgba.luminance
+)
 
 /**
  * The contrast ratio of two colors. A minimum contrast ratio of 4.5 is
@@ -644,14 +646,7 @@ export const distance =
  *   HSL has many different representations of black (arbitrary hue and
  *   saturation values).
  */
-export const Eq: Equals.Eq<Color> = {
-  equals: (a, b) => {
-    const ca = toRGBA(a)
-    const cb = toRGBA(b)
-
-    return ca.r == cb.r && ca.g == cb.g && ca.b == cb.b && ca.a == cb.a
-  }
-}
+export const Eq: Equals.Eq<Color> = Equals.contramap(toRGBA)(Rgba.Eq)
 
 /**
  * @category instances
@@ -671,7 +666,6 @@ export const OrdBrightness: Ord.Ord<Color> = Ord.contramap(brightness)(
  * @category instances
  * @since 0.1.0
  */
-export const Show: S.Show<Color> = {
-  show: (c: Color) =>
-    pipe(toRGBA(c), ({ r, g, b, a }) => `${r}, ${g}, ${b}, ${a}`)
+export const Show: Sh.Show<Color> = {
+  show: (c: Color) => pipe(toRGBA(c), Rgba.Show.show)
 }
