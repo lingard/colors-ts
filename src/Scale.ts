@@ -12,18 +12,11 @@ import * as C from './Color'
 import { constant, Endomorphism, flow, pipe } from 'fp-ts/function'
 import { intercalate } from 'fp-ts/Foldable'
 import { red, yellow } from './X11'
+import { unitInterval, UnitInterval } from './UnitInterval'
 
-interface RatioBrand {
-  readonly Ratio: unique symbol
-}
+type Ratio = UnitInterval
 
-/**
- * ColorStop ratio
- *
- * @since 0.1.0
- * @category model
- */
-export type Ratio = number & RatioBrand
+const ratio = unitInterval
 
 /**
  * A point on the color scale.
@@ -41,7 +34,11 @@ export type ColorStop = readonly [C.Color, Ratio]
  * @since 0.1.0
  * @category model
  */
-export type ColorStops = readonly [C.Color, ReadonlyArray<ColorStop>, C.Color]
+export type ColorStops = readonly [
+  first: C.Color,
+  middle: ReadonlyArray<ColorStop>,
+  last: C.Color
+]
 
 /**
  * A color scale is represented by a list of `ColorStops` and a `ColorSpace` that is
@@ -50,13 +47,10 @@ export type ColorStops = readonly [C.Color, ReadonlyArray<ColorStop>, C.Color]
  * @since 0.1.0
  * @category model
  */
-export type ColorScale = [C.ColorSpace, ColorStops]
-
-const clampNumber = Ord.clamp(number.Ord)
-
-const clamp1 = clampNumber(0, 1)
-
-const ratio = (r: number) => clamp1(r) as Ratio
+export type ColorScale = {
+  readonly mode: C.ColorSpace
+  readonly stops: ColorStops
+}
 
 /**
  * Create a color stop from a given `Color` and a number between 0 and 1.
@@ -99,7 +93,10 @@ export const colorScale = (
   l: C.Color,
   m: ReadonlyArray<readonly [C.Color, number]>,
   r: C.Color
-): ColorScale => [space, colorStops(l, m, r)]
+): ColorScale => ({
+  mode: space,
+  stops: colorStops(l, m, r)
+})
 
 /**
  * A scale of colors from black to white.
@@ -112,7 +109,7 @@ export const grayscale = colorScale('rgb', C.black, [], C.white)
 /**
  * Extract the ratio out of a ColorStop
  *
- * @category deconstructors
+ * @category destructors
  * @since 0.1.0
  */
 export const stopRatio: (s: ColorStop) => Ratio = ([, r]) => r
@@ -120,7 +117,7 @@ export const stopRatio: (s: ColorStop) => Ratio = ([, r]) => r
 /**
  * Extract the color out of a ColorStop
  *
- * @category deconstructors
+ * @category destructors
  * @since 0.1.0
  */
 export const stopColor: (s: ColorStop) => C.Color = ([c]) => c
@@ -128,18 +125,30 @@ export const stopColor: (s: ColorStop) => C.Color = ([c]) => c
 const OrdColorStop: Ord.Ord<ColorStop> = Ord.contramap(stopRatio)(number.Ord)
 
 /**
+ * Extract the color out of a ColorStop
+ *
+ * @category destructors
+ * @since 0.1.6
+ */
+export const stops: (s: ColorScale) => ColorStops = ({ stops }: ColorScale) =>
+  stops
+
+/**
  * get the first color of the scale
  *
  * @since 0.1.4
  */
-export const first: (c: ColorScale) => C.Color = ([, s]) => s[0]
+export const first: (c: ColorScale) => C.Color = flow(stops, ([first]) => first)
 
 /**
  * get the last color of the scale
  *
  * @since 0.1.4
  */
-export const last: (c: ColorScale) => C.Color = ([, s]) => s[2]
+export const last: (c: ColorScale) => C.Color = flow(
+  stops,
+  ([, , last]) => last
+)
 
 /**
  * get the middle colors of the scale
@@ -147,14 +156,17 @@ export const last: (c: ColorScale) => C.Color = ([, s]) => s[2]
  * @since 0.1.4
  * @internal
  */
-export const middle: (c: ColorScale) => readonly ColorStop[] = ([, s]) => s[1]
+export const middle: (c: ColorScale) => readonly ColorStop[] = flow(
+  stops,
+  ([, middle]) => middle
+)
 
 /**
  * get the `ColorSpace` mode of the scale
  *
  * @since 0.1.4
  */
-export const mode: (s: ColorScale) => C.ColorSpace = ([s]) => s
+export const mode: (s: ColorScale) => C.ColorSpace = (s) => s.mode
 
 /**
  * change the `ColorSpace` mode of the scale
@@ -165,13 +177,13 @@ export const changeMode: (
   space: C.ColorSpace
 ) => (scale: ColorScale) => ColorScale =
   (space) =>
-  ([, stops]) =>
+  ({ stops }) =>
     colorScale(space, ...stops)
 
 /**
  * transform a scale to an ReadonlyArray of ColorStops
  *
- * @category deconstructors
+ * @category destructors
  * @since 0.1.4
  */
 export const toReadonlyArray: (s: ColorScale) => ReadonlyArray<ColorStop> = (
@@ -186,7 +198,7 @@ export const toReadonlyArray: (s: ColorScale) => ReadonlyArray<ColorStop> = (
 /**
  * transform a scale to an Array of ColorStops
  *
- * @category deconstructors
+ * @category destructors
  * @since 0.1.0
  * @deprecated use toReadonlyArray
  */
@@ -196,7 +208,7 @@ export const toArray: (s: ColorScale) => ColorStop[] = toReadonlyArray as any
 /**
  * returns the amount of color stops in the scale
  *
- * @category deconstructors
+ * @category destructors
  * @since 0.1.4
  */
 export const length: (s: ColorScale) => number = flow(
@@ -288,7 +300,7 @@ export const combine: (
 ) => (a: ColorScale) => (b: ColorScale) => ColorScale = (e) => (a) => (b) => {
   const c = combineColorStops(e)
 
-  return pipe(b[1], c(a[1]), (s) => colorScale(a[0], ...s))
+  return pipe(b.stops, c(a.stops), (s) => colorScale(a.mode, ...s))
 }
 
 /**
@@ -310,8 +322,8 @@ export const reverseStops: Endomorphism<ColorStops> = ([start, stops, end]) =>
  *
  * @since 0.1.4
  */
-export const reverse: Endomorphism<ColorScale> = ([scale, stops]) =>
-  colorScale(scale, ...reverseStops(stops))
+export const reverse: Endomorphism<ColorScale> = ({ mode, stops }) =>
+  colorScale(mode, ...reverseStops(stops))
 
 /**
  * Create `ColorStops` from a list of colors such that they will be evenly
@@ -383,8 +395,8 @@ export const insertStop =
 export const addStop: (c: C.Color, r: number) => (s: ColorScale) => ColorScale =
 
     (c, r) =>
-    ([mode, s]) =>
-      pipe(s, insertStop(c, r), ([s, m, e]) =>
+    ({ mode, stops }) =>
+      pipe(stops, insertStop(c, r), ([s, m, e]) =>
         colorScale(mode, s, RA.toArray(m), e)
       )
 
@@ -451,10 +463,10 @@ export const simpleSampler: (
  *
  * @since 0.1.0
  */
-export const sample: (s: ColorScale) => (x: number) => C.Color = ([
+export const sample: (s: ColorScale) => (x: number) => C.Color = ({
   mode,
-  scale
-]) => pipe(scale, simpleSampler(C.mix(mode)))
+  stops
+}) => pipe(stops, simpleSampler(C.mix(mode)))
 
 /**
  * Takes a sampling function and returns a list of colors that is sampled via
@@ -520,8 +532,8 @@ export const modify: (
   f: (i: number, c: C.Color) => C.Color
 ) => (s: ColorScale) => ColorScale =
   (f) =>
-  ([space, stops]) =>
-    pipe(stops, modifyColorStops(f), (stops) => colorScale(space, ...stops))
+  ({ mode, stops }) =>
+    pipe(stops, modifyColorStops(f), (stops) => colorScale(mode, ...stops))
 
 /**
  * A spectrum of fully saturated hues (HSL color space).
@@ -658,12 +670,12 @@ const cssColorStopsRGB: (s: ColorStops) => string = ([s, m, e]) => {
  *
  * @since 0.1.0
  */
-export const cssColorStops: (s: ColorScale) => string = ([space, stops]) => {
-  if (space === 'rgb') {
+export const cssColorStops: (s: ColorScale) => string = ({ mode, stops }) => {
+  if (mode === 'rgb') {
     return cssColorStopsRGB(stops)
   }
 
-  const interpolate = C.mix(space)
+  const interpolate = C.mix(mode)
   const sample = simpleSampler(interpolate)
   const sampleSteps = minColorStops(sample)
 

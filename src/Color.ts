@@ -7,61 +7,31 @@ import * as S from 'fp-ts/Show'
 import * as O from 'fp-ts/Option'
 import * as number from 'fp-ts/number'
 import { sequenceT } from 'fp-ts/Apply'
-import { Endomorphism, pipe } from 'fp-ts/function'
+import { Endomorphism, flow, pipe } from 'fp-ts/function'
 
-import { clipHue, Hue } from './Hue'
+import * as Hsla from './Hsla'
+import * as Hsva from './Hsva'
+import * as Rgba from './Rgba'
+import * as XYZ from './XYZ'
+import * as Lab from './Lab'
+import * as LCh from './LCh'
 import * as Int from './Int'
-import {
-  deg2rad,
-  interpolate,
-  interpolateAngle,
-  modPos,
-  rad2deg,
-  square
-} from './Math'
-
-/**
- * @category internal
- */
-const clampNumber = Ord.clamp(number.Ord)
-
-const clamp1 = clampNumber(0, 1)
-const clamp255 = clampNumber(0, 255)
-
-const clampRGB = (r: number, g: number, b: number) => [
-  clamp255(r),
-  clamp255(g),
-  clamp255(b)
-]
-
-const strMatch = (pattern: RegExp) => (str: string) =>
-  O.fromNullable(str.match(pattern))
-
-interface ColorBrand {
-  readonly Color: unique symbol
-}
-
-/**
- * Note:
- * - Colors outside the sRGB gamut which cannot be displayed on a typical
- *   computer screen can not be represented by `Color`.
- *
- * @category model
- * @since 0.1.0
- */
-export type Color = readonly [
-  hue: Hue,
-  saturation: number,
-  lightness: number,
-  alpha: number
-] &
-  ColorBrand
+import { interpolate, interpolateAngle, square } from './Math'
 
 /**
  * @category model
  * @since 0.1.0
  */
 export type ColorSpace = 'rgb' | 'hsl' | 'LCh' | 'Lab'
+
+/**
+ *  Colors are represented by their HSL values (hue, saturation, lightness) internally,
+ *  as this provides more flexibility than storing RGB values.
+ *
+ * @category model
+ * @since 0.1.0
+ */
+export type Color = Hsla.Hsla
 
 /**
  * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
@@ -71,8 +41,8 @@ export type ColorSpace = 'rgb' | 'hsl' | 'LCh' | 'Lab'
  * @category constructors
  * @since 0.1.0
  */
-export const hsla = (h: number, s: number, l: number, a: number): Color =>
-  [h, clamp1(s), clamp1(l), clamp1(a)] as unknown as Color
+export const hsla: (h: number, s: number, l: number, a: number) => Color =
+  Hsla.hsla
 
 /**
  * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
@@ -94,50 +64,10 @@ export const hsl = (h: number, s: number, l: number): Color => hsla(h, s, l, 1)
  * @category constructors
  * @since 0.1.0
  */
-export const rgba = (r: number, g: number, b: number, alpha: number): Color => {
-  const [red, green, blue] = clampRGB(r, g, b)
-  const maxChroma = Math.max(Math.max(red, green), blue)
-  const minChroma = Math.min(Math.min(red, green), blue)
-  const chroma = maxChroma - minChroma
-
-  const getHue = () => {
-    const r = red / 255
-    const g = green / 255
-    const b = blue / 255
-    const c = chroma / 255
-
-    if (c === 0) {
-      return 0
-    }
-
-    if (maxChroma === red) {
-      return pipe((g - b) / c, (x) => modPos(x)(6.0))
-    }
-
-    if (maxChroma === green) {
-      return (b - r) / c + 2.0
-    }
-
-    return (r - g) / c + 4.0
-  }
-
-  const hue = 60.0 * getHue()
-  const lightness = (maxChroma + minChroma) / (255.0 * 2.0)
-
-  const getSaturation = () => {
-    const c = chroma / 255
-
-    if (chroma === 0) {
-      return 0
-    }
-
-    return c / (1.0 - Math.abs(2.0 * lightness - 1.0))
-  }
-
-  const saturation = getSaturation()
-
-  return hsla(hue, saturation, lightness, alpha)
-}
+export const rgba: (r: number, g: number, b: number, a: number) => Color = flow(
+  Rgba.rgba,
+  Hsla.fromRgba
+)
 
 /**
  * Create a `Color` from integer RGB values between 0 and 255.
@@ -154,7 +84,12 @@ export const rgb = (r: number, g: number, b: number): Color => rgba(r, g, b, 1)
  * @since 0.1.0
  */
 export const rgba2 = (r: number, g: number, b: number, a: number): Color =>
-  rgba(Math.round(r * 255.0), Math.round(g * 255.0), Math.round(b * 255.0), a)
+  rgba(
+    Rgba.channelFromUnitInterval(r),
+    Rgba.channelFromUnitInterval(g),
+    Rgba.channelFromUnitInterval(b),
+    a
+  )
 
 /**
  * Create a `Color` from RGB values between 0.0 and 1.0.
@@ -173,23 +108,10 @@ export const rgb2 = (r: number, g: number, b: number): Color =>
  * @category constructors
  * @since 0.1.0
  */
-export const hsva = (h: number, s: number, v: number, a: number): Color => {
-  const value = clamp1(v)
-  const { saturation, lightness } = pipe((2.0 - s) * value, (tmp) => ({
-    saturation: (s * value) / (tmp < 1.0 ? tmp : 2.0 - tmp),
-    lightness: tmp / 2.0
-  }))
-
-  if (value === 0) {
-    return hsla(h, s / (2.0 - s), 0.0, a)
-  }
-
-  if (s === 0 && value === 1.0) {
-    return hsla(h, 0.0, 1.0, a)
-  }
-
-  return hsla(h, saturation, lightness, a)
-}
+export const hsva: (h: number, s: number, v: number, a: number) => Color = flow(
+  Hsva.hsva,
+  Hsla.fromHsva
+)
 
 /**
  * Create a `Color` from Hue, Saturation and Value values. The Hue is
@@ -215,23 +137,10 @@ export const hsv = (h: number, s: number, v: number): Color => hsva(h, s, v, 1)
  * @category constructors
  * @since 0.1.0
  */
-export const xyz = (x: number, y: number, z: number): Color => {
-  const f = (c: number) =>
-    c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1.0 / 2.4) - 0.055
-
-  const r = f(3.2406 * x - 1.5372 * y - 0.4986 * z)
-  const g = f(-0.9689 * x + 1.8758 * y + 0.0415 * z)
-  const b = f(0.0557 * x - 0.204 * y + 1.057 * z)
-
-  return rgb2(r, g, b)
-}
-
-/**
- * Illuminant D65 constants used for Lab color space conversions.
- *
- * @internal
- */
-const d65 = { xn: 0.95047, yn: 1.0, zn: 1.08883 }
+export const xyz: (x: number, y: number, z: number) => Color = flow(
+  XYZ.xyz,
+  Hsla.fromXYZ
+)
 
 /**
  * Create a `Color` from L, a and b coordinates coordinates in the Lab color
@@ -243,18 +152,10 @@ const d65 = { xn: 0.95047, yn: 1.0, zn: 1.08883 }
  * @category constructors
  * @since 0.1.0
  */
-export const lab = (l: number, a: number, b: number): Color => {
-  const delta = 6.0 / 29.0
-  const finv = (t: number) =>
-    t > delta ? Math.pow(t, 3.0) : 3.0 * delta * delta * (t - 4.0 / 29.0)
-
-  const l2 = (l + 16.0) / 116.0
-  const x = d65.xn * finv(l2 + a / 500.0)
-  const y = d65.yn * finv(l2)
-  const z = d65.zn * finv(l2 - b / 200.0)
-
-  return xyz(x, y, z)
-}
+export const lab: (l: number, a: number, b: number) => Color = flow(
+  Lab.lab,
+  Hsla.fromLab
+)
 
 /**
  * Create a `Color` from lightness, chroma and hue coordinates in the CIE LCh
@@ -266,12 +167,13 @@ export const lab = (l: number, a: number, b: number): Color => {
  * @category constructors
  * @since 0.1.0
  */
-export const lch = (l: number, c: number, h: number): Color => {
-  const a = c * Math.cos(h * deg2rad)
-  const b = c * Math.sin(h * deg2rad)
+export const lch: (l: number, c: number, h: number) => Color = flow(
+  LCh.lch,
+  Hsla.fromLCh
+)
 
-  return lab(l, a, b)
-}
+const strMatch = (pattern: RegExp) => (str: string) =>
+  O.fromNullable(str.match(pattern))
 
 /**
  * Parse a hexadecimal RGB code of the form `#rgb` or `#rrggbb`. The `#`
@@ -312,7 +214,7 @@ export const fromHexString: (hex: string) => O.Option<Color> = (str) => {
   )
 }
 
-const clampInt = clampNumber(0, 0xffffff)
+const clampInt = Ord.clamp(number.Ord)(0, 0xffffff)
 
 /**
  * Converts an integer to a color (RGB representation). `0` is black and
@@ -366,56 +268,9 @@ export const graytone = (l: number): Color => hsl(0.0, 0.0, l)
  * Get the color hue in the interval [0, 360].
  *
  * @since 0.1.4
- * @category deconstructors
+ * @category destructors
  */
-export const hue: (c: Color) => number = ([h]) => clipHue(h)
-
-/**
- * Convert a `Color` to its red, green, blue and alpha values. All values
- * are numbers in the range from 0.0 to 1.0.
- *
- * @since 0.1.0
- * @category deconstructors
- */
-export const toRGBA2: (c: Color) => {
-  r: number
-  g: number
-  b: number
-  a: number
-} = ([hue, s, l, a]) => {
-  const h = clipHue(hue) / 60.0
-  const chr = (1.0 - Math.abs(2.0 * l - 1.0)) * s
-  const m = l - chr / 2.0
-  const x = chr * (1.0 - Math.abs((h % 2.0) - 1.0))
-
-  const getCol = () => {
-    if (h < 1.0) {
-      return { r: chr, g: x, b: 0.0 }
-    }
-
-    if (1.0 <= h && h < 2.0) {
-      return { r: x, g: chr, b: 0.0 }
-    }
-
-    if (2.0 <= h && h < 3.0) {
-      return { r: 0.0, g: chr, b: x }
-    }
-
-    if (3.0 <= h && h < 4.0) {
-      return { r: 0.0, g: x, b: chr }
-    }
-
-    if (4.0 <= h && h < 5.0) {
-      return { r: x, g: 0.0, b: chr }
-    }
-
-    return { r: chr, g: 0.0, b: x }
-  }
-
-  const col = getCol()
-
-  return { r: col.r + m, g: col.g + m, b: col.b + m, a }
-}
+export const hue: (c: Color) => number = ({ h }) => h
 
 /**
  * Convert a `Color` to its red, green, blue and alpha values. The RGB values
@@ -423,93 +278,27 @@ export const toRGBA2: (c: Color) => {
  * between 0.0 and 1.0.
  *
  * @since 0.1.0
- * @category deconstructors
+ * @category destructors
  */
-export const toRGBA: (c: Color) => {
-  r: number
-  g: number
-  b: number
-  a: number
-} = (c) =>
-  pipe(toRGBA2(c), (c) => ({
-    r: Math.round(255 * c.r),
-    g: Math.round(255 * c.g),
-    b: Math.round(255 * c.b),
-    a: c.a
-  }))
+export const toRGBA: (c: Color) => Rgba.Rgba = Rgba.fromHSLA
 
 /**
  * Convert a `Color` to its Hue, Saturation, Lightness and Alpha values. See
  * `hsla` for the ranges of each channel.
  *
  * @since 0.1.0
- * @category deconstructors
+ * @category destructors
  */
-export const toHSLA: (c: Color) => {
-  h: number
-  s: number
-  l: number
-  a: number
-} = ([h, s, l, a]): {
-  h: number
-  s: number
-  l: number
-  a: number
-} => ({
-  h: clipHue(h),
-  s,
-  l,
-  a
-})
+export const toHSLA: (c: Color) => Hsla.Hsla = (c) => c
 
 /**
  * Convert a `Color` to its Hue, Saturation, Value and Alpha values. See
  * `hsva` for the ranges of each channel.
  *
  * @since 0.1.0
- * @category deconstructors
+ * @category destructors
  */
-export const toHSVA: (c: Color) => {
-  h: number
-  s: number
-  v: number
-  a: number
-} = ([h, s, l, a]): {
-  h: number
-  s: number
-  v: number
-  a: number
-} => {
-  const tmp = s * (l < 0.5 ? l : 1.0 - l)
-  const hue = clipHue(h)
-  const saturation = (2.0 * tmp) / (l + tmp)
-  const v = l + tmp
-
-  if (l === 0) {
-    return {
-      h: hue,
-      s: (2.0 * s) / (1.0 + s),
-      v: 0.0,
-      a
-    }
-  }
-
-  if (s === 0 && l === 1) {
-    return {
-      h: hue,
-      s: 0.0,
-      v: 1.0,
-      a
-    }
-  }
-
-  return {
-    h: hue,
-    s: saturation,
-    v,
-    a
-  }
-}
+export const toHSVA: (c: Color) => Hsva.Hsva = Hsva.fromHsla
 
 /**
  * Get XYZ coordinates according to the CIE 1931 color space.
@@ -519,23 +308,9 @@ export const toHSVA: (c: Color) => {
  * - https://en.wikipedia.org/wiki/SRGB
  *
  * @since 0.1.0
- * @category deconstructors
+ * @category destructors
  */
-export const toXYZ: (c: Color) => { x: number; y: number; z: number } = (c) => {
-  const finv = (c: number) =>
-    c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
-
-  const rec = toRGBA2(c)
-  const r = finv(rec.r)
-  const g = finv(rec.g)
-  const b = finv(rec.b)
-
-  const x = 0.4124 * r + 0.3576 * g + 0.1805 * b
-  const y = 0.2126 * r + 0.7152 * g + 0.0722 * b
-  const z = 0.0193 * r + 0.1192 * g + 0.9505 * b
-
-  return { x, y, z }
-}
+export const toXYZ: (c: Color) => XYZ.XYZ = XYZ.fromHsla
 
 /**
  * Get L, a and b coordinates according to the Lab color space.
@@ -543,48 +318,24 @@ export const toXYZ: (c: Color) => { x: number; y: number; z: number } = (c) => {
  * See: https://en.wikipedia.org/wiki/Lab_color_space
  *
  * @since 0.1.0
- * @category deconstructors
+ * @category destructors
  */
-export const toLab: (c: Color) => { l: number; a: number; b: number } = (c) => {
-  const cut = Math.pow(6.0 / 29.0, 3.0)
-  const f = (t: number) =>
-    t > cut
-      ? Math.pow(t, 1.0 / 3.0)
-      : (1.0 / 3.0) * Math.pow(29.0 / 6.0, 2.0) * t + 4.0 / 29.0
-
-  const rec = toXYZ(c)
-  const fy = f(rec.y / d65.yn)
-
-  const l = 116.0 * fy - 16.0
-  const a = 500.0 * (f(rec.x / d65.xn) - fy)
-  const b = 200.0 * (fy - f(rec.z / d65.zn))
-
-  return { l, a, b }
-}
+export const toLab: (c: Color) => Lab.Lab = Lab.fromHsla
 
 /**
  * Get L, C and h coordinates according to the CIE LCh color space.
  * See: https://en.wikipedia.org/wiki/Lab_color_space
  *
  * @since 0.1.0
- * @category deconstructors
+ * @category destructors
  */
-export const toLCh: (c: Color) => { l: number; c: number; h: number } = (c) => {
-  const rec = toLab(c)
-  const l = rec.l
-  const a = rec.a
-  const b = rec.b
-  const c2 = Math.sqrt(a * a + b * b)
-  const h = clipHue(Math.atan2(b, a) * rad2deg)
-
-  return { l, c: c2, h }
-}
+export const toLCh: (c: Color) => LCh.LCh = LCh.fromHsla
 
 const hexToString = Int.toStringAs(Int.hexadecimal)
 
 /**
  * @since 0.1.0
- * @category deconstructors
+ * @category destructors
  */
 export const toHexString: (c: Color) => string = (color) => {
   const c = toRGBA(color)
@@ -605,9 +356,9 @@ export const toHexString: (c: Color) => string = (color) => {
  * A CSS representation of the color in the form `hsl(..)` or `hsla(...)`.
  *
  * @since 0.1.0
- * @category deconstructors
+ * @category destructors
  */
-export const cssStringHSLA: (c: Color) => string = ([h, s, l, a]) => {
+export const cssStringHSLA: (c: Color) => string = ({ h, s, l, a }) => {
   const round = (n: number) => Math.round(100.0 * n) / 100.0
   const saturation = `${round(s * 100.0)}%`
   const lightness = `${round(l * 100.0)}%`
@@ -621,7 +372,7 @@ export const cssStringHSLA: (c: Color) => string = ([h, s, l, a]) => {
  * A CSS representation of the color in the form `rgb(..)` or `rgba(...)`
  *
  * @since 0.1.0
- * @category deconstructors
+ * @category destructors
  */
 export const cssStringRGBA = (c: Color): string =>
   pipe(toRGBA(c), (c) =>
@@ -637,7 +388,7 @@ export const cssStringRGBA = (c: Color): string =>
  */
 export const rotateHue: (angle: number) => (c: Color) => Color =
   (angle: number) =>
-  ([h, s, l, a]) =>
+  ({ h, s, l, a }) =>
     hsla(h + angle, s, l, a)
 
 /**
@@ -656,7 +407,7 @@ export const complementary = rotateHue(180)
  */
 export const lighten: (f: number) => (c: Color) => Color =
   (f) =>
-  ([h, s, l, a]) =>
+  ({ h, s, l, a }) =>
     hsla(h, s, l + f, a)
 
 /**
@@ -677,7 +428,7 @@ export const darken = (f: number): Endomorphism<Color> => lighten(-f)
  */
 export const saturate: (f: number) => (c: Color) => Color =
   (f) =>
-  ([h, s, l, a]) =>
+  ({ h, s, l, a }) =>
     hsla(h, s + f, l, a)
 
 /**
@@ -730,8 +481,8 @@ export const mix =
       }
 
       case 'rgb': {
-        const f = toRGBA2(c1)
-        const t = toRGBA2(c2)
+        const f = Rgba.fromHSLA2(c1)
+        const t = Rgba.fromHSLA2(c2)
 
         return rgba2(i(f.r)(t.r), i(f.g)(t.g), i(f.b)(t.b), i(f.a)(t.a))
       }
@@ -788,7 +539,10 @@ export const mixLab: Interpolator = mix('Lab')
  * @since 0.1.0
  */
 export const brightness = (c: Color): number =>
-  pipe(toRGBA2(c), (c) => (299.0 * c.r + 587.0 * c.g + 114.0 * c.b) / 1000.0)
+  pipe(
+    Rgba.fromHSLA2(c),
+    (c) => (299.0 * c.r + 587.0 * c.g + 114.0 * c.b) / 1000.0
+  )
 
 /**
  * The relative brightness of a color (normalized to 0.0 for darkest black
@@ -799,7 +553,7 @@ export const brightness = (c: Color): number =>
  * @since 0.1.0
  */
 export const luminance: (color: Color) => number = (c): number => {
-  const rgba = toRGBA2(c)
+  const rgba = Rgba.fromHSLA2(c)
   const f = (c: number) => {
     if (c <= 0.03928) {
       return c / 12.92

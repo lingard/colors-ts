@@ -25,8 +25,8 @@ export const interpolate =
     a + fraction * (b - a)
 
 export type Path = {
-  from: number
-  to: number
+  readonly from: number
+  readonly to: number
 }
 
 const dist = ({ from, to }: Path): number => Math.abs(to - from)

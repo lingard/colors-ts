@@ -36,3 +36,7 @@ pipe(
 )
 // => (4) ["#000000", "#0000ff", "#90ee90", "#ffffff"]
 ```
+
+### Notes
+
+- Colors outside the sRGB gamut which cannot be displayed on a typical computer screen can not be represented by `Color`.

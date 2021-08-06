@@ -27,7 +27,7 @@ describe('Scale', () => {
   test('addStop', () => {
     const contains =
       (c: C.Color, r: number) =>
-      ([, stops]: S.ColorScale) => {
+      ({ stops }: S.ColorScale) => {
         const [, m] = stops
 
         return m.findIndex(([c2, r2]) => c === c2 && r === r2) !== -1
@@ -189,7 +189,7 @@ describe('Scale', () => {
       fc.property(
         ColorScaleArbitrary,
         fc.integer(0, 200),
-        (s, x) => pipe(s, ([, stops]) => stops, min(x), length) >= x
+        (s, x) => pipe(S.stops(s), min(x), length) >= x
       )
     )
   })
