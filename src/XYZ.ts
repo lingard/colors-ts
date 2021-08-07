@@ -1,7 +1,3 @@
-import { Hsla } from './Hsla'
-import * as Lab from './Lab'
-import * as Rgba from './Rgba'
-
 /**
  * A `Color` represented by XYZ coordinates in the CIE 1931 color space. Note
  * that a `Color` always represents a color in the sRGB gamut (colors that
@@ -12,6 +8,13 @@ import * as Rgba from './Rgba'
  * - https://en.wikipedia.org/wiki/CIE_1931_color_space
  * - https://en.wikipedia.org/wiki/SRGB
  *
+ * @since 0.1.5
+ */
+import { Hsla } from './Hsla'
+import * as Lab from './Lab'
+import * as Rgba from './Rgba'
+
+/**
  * @category model
  * @since 0.1.5
  */

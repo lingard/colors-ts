@@ -1,12 +1,15 @@
+/**
+ * A color represented by the HSV color model
+ *
+ * @since 0.1.5
+ */
 import { Hsla } from './Hsla'
 import { clipHue, Hue } from './Hue'
 import { UnitInterval, unitInterval } from './UnitInterval'
 
 /**
- * Represents a color using the rgb color system
- *
  * @category model
- * @since 1.0.0
+ * @since 0.1.5
  */
 export interface Hsva {
   /**
@@ -20,6 +23,9 @@ export interface Hsva {
    */
   readonly s: UnitInterval
 
+  /**
+   * Value
+   */
   readonly v: UnitInterval
 
   /**

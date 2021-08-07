@@ -1,26 +1,37 @@
 /**
+ * A color in the CIE LCh color space.
+ * Note: See documentation for [`xyz`](./XYZ.ts.html). The same restrictions apply here.
+ *
+ * See: https://en.wikipedia.org/wiki/Lab_color_space
+ *
  * @since 0.1.5
  */
 import { pipe } from 'fp-ts/function'
 import * as struct from 'fp-ts/struct'
 import { Hsla } from './Hsla'
-import { clipHue } from './Hue'
+import { clipHue, Hue, hue } from './Hue'
 import * as Lab from './Lab'
 import { interpolate, interpolateAngle, rad2deg } from './Math'
 
 /**
- * A color in the CIE LCh color space.
- * Note: See documentation for `xyz`. The same restrictions apply here.
- *
- * See: https://en.wikipedia.org/wiki/Lab_color_space
- *
  * @category model
  * @since 0.1.5
  */
 export interface LCh {
+  /**
+   * A number representing the lightness
+   */
   readonly l: number
+
+  /**
+   * A number representing the chroma value
+   */
   readonly c: number
-  readonly h: number
+
+  /**
+   * A number between `0` and `360` representing the hue of the color in degrees.
+   */
+  readonly h: Hue
 }
 
 /**
@@ -30,7 +41,7 @@ export interface LCh {
 export const lch = (l: number, c: number, h: number): LCh => ({
   l,
   c,
-  h
+  h: hue(h)
 })
 
 /**

@@ -36,8 +36,14 @@ export const channel = (n: number): Channel =>
  * @since 0.1.5
  * @internal
  */
-export const channelFromInterval = (n: number): number =>
+export const denormalizeChannel = (n: number): number =>
   pipe(Math.round(n * 255.0), channel)
+
+/**
+ * @since 0.1.5
+ * @internal
+ */
+export const normalizedChannel = unitInterval
 
 /**
  * Represents a color using the rgb color system
@@ -69,7 +75,10 @@ export interface Rgba {
 }
 
 /**
- * A rgb color where the channels are represented by range between `0` to `1`
+ * A rgb color where the channels are represented by range between `0` to `1`.
+ *
+ * TODO: Find a better name for this type as `Normalized` is probably not
+ *       technically correct.
  *
  * @category model
  * @since 0.1.5
@@ -126,9 +135,9 @@ const normalized = (
   b: number,
   a: number
 ): Normalized => ({
-  r: unitInterval(r),
-  g: unitInterval(g),
-  b: unitInterval(b),
+  r: normalizedChannel(r),
+  g: normalizedChannel(g),
+  b: normalizedChannel(b),
   a: unitInterval(a)
 })
 
@@ -187,9 +196,9 @@ export const normalizedFromHsla: (c: Hsla) => Normalized = ({ h, s, l, a }) => {
  */
 const fromNormalized: (c: Normalized) => Rgba = (c) =>
   rgba(
-    channelFromInterval(c.r),
-    channelFromInterval(c.g),
-    channelFromInterval(c.b),
+    denormalizeChannel(c.r),
+    denormalizeChannel(c.g),
+    denormalizeChannel(c.b),
     c.a
   )
 

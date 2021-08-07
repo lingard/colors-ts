@@ -28,6 +28,7 @@ describe('Color', () => {
     expect(C.rgba(1, 2, 3, 0.3)).toEqualColor(C.rgba(1, 2, 3, 0.3))
     expect(C.black).toEqualColor(C.hsl(0, 0, 0))
     expect(C.white).toEqualColor(C.hsl(0, 0, 1))
+    expect(C.rgb2(1, 1, 1)).toEqualColor(C.white)
 
     expect(C.hsl(120.0, 0.3, 0.5)).toNotEqualColor(C.hsl(122.0, 0.3, 0.5))
     expect(C.hsl(120.0, 0.3, 0.5)).toNotEqualColor(C.hsl(120.0, 0.32, 0.5))
@@ -202,6 +203,15 @@ describe('Color', () => {
     hexRoundtrip(162.4, 0.779, 0.447)
   })
 
+  test('toCSS', () => {
+    expect(C.toCSS('hsl')(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
+      'hsla(120.1, 33%, 55%, 0.3)'
+    )
+    expect(C.toCSS('rgb')(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
+    // @ts-expect-error - valid blend mode required
+    expect(() => C.toCSS('foo')(C.black)).toThrowError()
+  })
+
   test('toCSSHsla', () => {
     expect(C.toCSSHsla(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
       'hsla(120.1, 33%, 55%, 0.3)'
@@ -264,14 +274,13 @@ describe('Color', () => {
       )
     })
 
-    // fc.assert(
-    //   fc.property(
-    //     ColorArbitrary,
-    //     (c) =>
-    //       Math.round(100 * C.luminance(C.toGray(c))) ===
-    //       Math.round(100 * C.luminance(c))
-    //   )
-    // )
+    fc.assert(
+      fc.property(ColorArbitrary, (c) =>
+        expect(Math.round(100 * C.luminance(C.toGray(c)))).toEqual(
+          Math.round(100 * C.luminance(c))
+        )
+      )
+    )
   })
 
   test('mix', () => {

@@ -86,9 +86,9 @@ export const rgb = (r: number, g: number, b: number): Color => rgba(r, g, b, 1)
  */
 export const rgba2 = (r: number, g: number, b: number, a: number): Color =>
   rgba(
-    Rgba.channelFromInterval(r),
-    Rgba.channelFromInterval(g),
-    Rgba.channelFromInterval(b),
+    Rgba.denormalizeChannel(r),
+    Rgba.denormalizeChannel(g),
+    Rgba.denormalizeChannel(b),
     a
   )
 
@@ -144,8 +144,7 @@ export const xyz: (x: number, y: number, z: number) => Color = flow(
 )
 
 /**
- * Create a `Color` from L, a and b coordinates coordinates in the Lab color
- * space.
+ * Create a `Color` from L, a and b coordinates in the Lab color space.
  * Note: See documentation for `xyz`. The same restrictions apply here.
  *
  * See: https://en.wikipedia.org/wiki/Lab_color_space
@@ -407,6 +406,7 @@ export const toCSSRgba = toCSS('rgb')
  *
  * @since 0.1.0
  * @category destructors
+ * @deprecated
  */
 export const cssStringRGBA: (c: Color) => string = toCSSRgba
 
@@ -467,7 +467,7 @@ export const saturate: (f: number) => (c: Color) => Color =
 export const desaturate = (f: number): Endomorphism<Color> => saturate(-f)
 
 /**
- * Convert a color to a gray tone with the same perceived luminance (see `luminance`)
+ * Convert a color to a gray tone with the same perceived luminance (see [luminance](#luminance))
  *
  * @since 0.1.0
  */

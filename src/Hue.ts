@@ -18,6 +18,11 @@ interface HueBrand {
  */
 export type Hue = number & HueBrand
 
+/**
+ * A number between `0` and `360` representing the hue of a color in degrees.
+ *
+ * @since 0.1.5
+ */
 export const hue: (n: number) => Hue = (n: number) => clipHue(n)
 
 /**

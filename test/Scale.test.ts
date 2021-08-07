@@ -196,19 +196,17 @@ describe('Scale', () => {
 
   test('cssColorStops', () => {
     expect(S.cssColorStops(S.grayscale)).toEqual(
-      `${C.cssStringHSLA(C.black)}, ${C.cssStringHSLA(C.white)}`
+      `${C.toCSSHsla(C.black)}, ${C.toCSSHsla(C.white)}`
     )
 
     expect(S.cssColorStops(S.colorScale('rgb', C.black, [], C.white))).toEqual(
-      `${C.cssStringHSLA(C.black)}, ${C.cssStringHSLA(C.white)}`
+      `${C.toCSSHsla(C.black)}, ${C.toCSSHsla(C.white)}`
     )
 
     expect(
       S.cssColorStops(S.colorScale('rgb', red, [[blue, 0.5]], green))
     ).toEqual(
-      `${C.cssStringHSLA(red)}, ${C.cssStringHSLA(blue)} 50%, ${C.cssStringHSLA(
-        green
-      )}`
+      `${C.toCSSHsla(red)}, ${C.toCSSHsla(blue)} 50%, ${C.toCSSHsla(green)}`
     )
 
     expect(
@@ -224,9 +222,9 @@ describe('Scale', () => {
         )
       )
     ).toEqual(
-      `${C.cssStringHSLA(red)}, ${C.cssStringHSLA(blue)} 25%, ${C.cssStringHSLA(
+      `${C.toCSSHsla(red)}, ${C.toCSSHsla(blue)} 25%, ${C.toCSSHsla(
         green
-      )} 75%, ${C.cssStringHSLA(green)}`
+      )} 75%, ${C.toCSSHsla(green)}`
     )
 
     expect(S.cssColorStops(S.colorScale('hsl', C.black, [], C.white))).toEqual(

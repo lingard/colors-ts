@@ -197,11 +197,11 @@ export const toReadonlyArray: (s: ColorScale) => ReadonlyArray<ColorStop> = (
   )
 
 /**
- * transform a scale to an Array of ColorStops
+ * Use [toReadonlyArray](#toReadonlyArray)
  *
  * @category destructors
  * @since 0.1.0
- * @deprecated use toReadonlyArray
+ * @deprecated
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const toArray: (s: ColorScale) => ColorStop[] = toReadonlyArray as any
