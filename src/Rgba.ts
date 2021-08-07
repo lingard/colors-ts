@@ -29,7 +29,8 @@ export type Channel = number & ChannelBrand
  * @since 0.1.5
  * @internal
  */
-export const channel = (n: number): Channel => clampChannel(n) as Channel
+export const channel = (n: number): Channel =>
+  pipe(clampChannel(n), Math.round) as Channel
 
 /**
  * @since 0.1.5
@@ -237,8 +238,11 @@ export const chroma: (c: Rgba) => number = (c) => maxChroma(c) - minChroma(c)
  *
  * @since 0.1.5
  */
-export const brightness = (c: Rgba): number =>
-  pipe(normalize(c), (c) => (299.0 * c.r + 587.0 * c.g + 114.0 * c.b) / 1000.0)
+export const brightness = (c: Rgba): number => {
+  console.log('c', c)
+
+  return (299.0 * c.r + 587.0 * c.g + 114.0 * c.b) / 1000.0 / 255
+}
 
 /**
  * The relative brightness of a color (normalized to 0.0 for darkest black
@@ -276,39 +280,27 @@ export const evolve: <F extends { [K in keyof Rgba]: (a: Rgba[K]) => number }>(
 /**
  * @since 0.1.5
  */
-export const evolveNormalized: <
-  F extends { [K in keyof Normalized]: (a: Normalized[K]) => number }
->(
-  transformations: F
-) => (c: Normalized) => Normalized = (t) => (c) =>
-  pipe(c, struct.evolve(t), ({ r, g, b, a }) => normalized(r, g, b, a))
-
-/**
- * @since 0.1.5
- */
 export const mix =
   (ratio: number) =>
   (a: Rgba) =>
   (b: Rgba): Rgba => {
     const i = interpolate(ratio)
-    const na = normalize(a)
 
     return pipe(
-      normalize(b),
-      evolveNormalized({
-        r: i(na.r),
-        g: i(na.g),
-        b: i(na.b),
-        a: i(na.a)
-      }),
-      fromNormalized
+      b,
+      evolve({
+        r: i(a.r),
+        g: i(a.g),
+        b: i(a.b),
+        a: i(a.a)
+      })
     )
   }
 
 /**
  * A CSS representation of the color in the form `rgb(..)` or `rgba(...)`
  *
- * @since 0.1.0
+ * @since 0.1.5
  * @category destructors
  */
 export const toCSS = (c: Rgba): string =>
@@ -329,7 +321,7 @@ export const Eq: Equals.Eq<Rgba> = Equals.struct({
 
 /**
  * @category instances
- * @since 0.1.0
+ * @since 0.1.5
  */
 export const Show: Sh.Show<Rgba> = Sh.struct({
   r: number.Show,

@@ -47,7 +47,7 @@ export interface Hsla {
  * @since 0.1.5
  */
 export const hsla = (h: number, s: number, l: number, a: number): Hsla => ({
-  h: Hue.clipHue(h),
+  h: Hue.hue(h),
   s: unitInterval(s),
   l: unitInterval(l),
   a: unitInterval(a)
@@ -154,9 +154,10 @@ export const mix =
  * @category destructors
  */
 export const toCSS: (c: Hsla) => string = ({ h, s, l, a }) => {
-  const round = (n: number) => Math.round(100.0 * n) / 100.0
-  const saturation = `${round(s * 100.0)}%`
-  const lightness = `${round(l * 100.0)}%`
+  const p = (n: number) =>
+    pipe(Math.round(100.0 * (n * 100.0)) / 100.0, (n) => `${n}%`)
+  const saturation = p(s)
+  const lightness = p(l)
 
   return a == 1.0
     ? `hsl(${h}, ${saturation}, ${lightness})`

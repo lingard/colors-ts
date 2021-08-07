@@ -5,10 +5,7 @@ import * as RNEA from 'fp-ts/ReadonlyNonEmptyArray'
 export const deg2rad = Math.PI / 180.0
 export const rad2deg = 180.0 / Math.PI
 
-/**
- * Like `%`, but always positive.
- */
-export const modPos =
+export const mod =
   (x: number) =>
   (y: number): number =>
     ((x % y) + y) % y

@@ -19,6 +19,8 @@ import {
   yellow
 } from '../src/X11'
 import { ColorArbitrary } from './utils'
+import { hue } from '../src/Hue'
+import { unitInterval } from '../src/UnitInterval'
 
 describe('Color', () => {
   test('Eq instance', () => {
@@ -210,6 +212,17 @@ describe('Color', () => {
     expect(C.toCSSHsla(C.hsla(360.0, 0.332, 0.549, 1.0))).toEqual(
       'hsl(360, 33.2%, 54.9%)'
     )
+
+    const p = (n: number) =>
+      pipe(unitInterval(n), (n) => Math.round(100.0 * (n * 100.0)) / 100.0)
+
+    fc.assert(
+      fc.property(fc.float(0, 720), fc.float(0, 2), fc.float(0, 1), (h, s, l) =>
+        expect(C.toCSSHsla(C.hsla(h, s, l, 1))).toEqual(
+          `hsl(${hue(h)}, ${p(s)}%, ${p(l)}%)`
+        )
+      )
+    )
   })
 
   test('toCSSRgba', () => {
@@ -250,6 +263,15 @@ describe('Color', () => {
         Math.round(100 * C.luminance(c))
       )
     })
+
+    // fc.assert(
+    //   fc.property(
+    //     ColorArbitrary,
+    //     (c) =>
+    //       Math.round(100 * C.luminance(C.toGray(c))) ===
+    //       Math.round(100 * C.luminance(c))
+    //   )
+    // )
   })
 
   test('mix', () => {

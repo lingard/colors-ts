@@ -2,7 +2,9 @@
  * @since 0.1.0
  */
 import { pipe } from 'fp-ts/function'
-import { modPos } from './Math'
+import { Ord } from 'fp-ts/number'
+import { between } from 'fp-ts/Ord'
+import { mod } from './Math'
 import * as Rgba from './Rgba'
 
 interface HueBrand {
@@ -24,7 +26,7 @@ export const hue: (n: number) => Hue = (n: number) => clipHue(n)
  * @since 0.1.0
  */
 export const clipHue: (n: number) => Hue = (hue) =>
-  (hue === 360 ? hue : modPos(hue)(360)) as Hue
+  (between(Ord)(0, 360)(hue) ? hue : mod(hue)(360)) as Hue
 
 /**
  * @category constructors
@@ -45,7 +47,7 @@ export const fromRGBA = (rgba: Rgba.Rgba): Hue => {
   }
 
   if (maxChroma === rgba.r) {
-    return pipe((g - b) / c, (x) => modPos(x)(6.0), n)
+    return pipe((g - b) / c, (x) => mod(x)(6.0), n)
   }
 
   if (maxChroma === rgba.g) {
