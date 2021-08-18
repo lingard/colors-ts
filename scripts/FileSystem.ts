@@ -18,7 +18,8 @@ export interface FileSystem {
 }
 
 const readFile = TE.taskify<fs.PathLike, string, NodeJS.ErrnoException, string>(
-  fs.readFile
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fs.readFile as any
 )
 const writeFile = TE.taskify<fs.PathLike, string, NodeJS.ErrnoException, void>(
   fs.writeFile
