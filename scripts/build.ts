@@ -97,8 +97,4 @@ const main: Build<void> = pipe(
   RTE.chain(() => makeModules)
 )
 
-run(
-  main({
-    ...fileSystem
-  })
-)
+run(main(fileSystem))

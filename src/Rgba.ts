@@ -7,10 +7,9 @@ import * as Sh from 'fp-ts/Show'
 import * as number from 'fp-ts/number'
 import * as struct from 'fp-ts/struct'
 import { UnitInterval, unitInterval } from './UnitInterval'
-import { Hsla } from './Hsla'
-import { clipHue } from './Hue'
+import { HSLA } from './HSLA'
 import { XYZ } from './XYZ'
-import { interpolate } from './Math'
+import { interpolate } from './math'
 import { pipe } from 'fp-ts/function'
 
 const clampChannel = Ord.clamp(number.Ord)(0, 255)
@@ -22,6 +21,7 @@ interface ChannelBrand {
 /**
  * @since 0.1.5
  * @category model
+ * @internal
  */
 export type Channel = number & ChannelBrand
 
@@ -30,7 +30,7 @@ export type Channel = number & ChannelBrand
  * @internal
  */
 export const channel = (n: number): Channel =>
-  pipe(clampChannel(n), Math.round) as Channel
+  pipe(Math.round(n), clampChannel) as Channel
 
 /**
  * @since 0.1.5
@@ -51,7 +51,7 @@ export const normalizedChannel = unitInterval
  * @category model
  * @since 0.1.5
  */
-export interface Rgba {
+export interface RGBA {
   /**
    * A number between `0` and `255` representing the red channel of the color
    */
@@ -71,7 +71,7 @@ export interface Rgba {
    * A number between `0` and `1` representing the opacity or transparency of the color
    * where `0` is fully transparent and `1` is fully opaque.
    */
-  readonly a: UnitInterval
+  readonly a: number
 }
 
 /**
@@ -111,7 +111,7 @@ export interface Normalized {
  * @since 0.1.5
  * @category constructors
  */
-export const rgba = (r: number, g: number, b: number, a: number): Rgba => ({
+export const rgba = (r: number, g: number, b: number, a: number): RGBA => ({
   r: channel(r),
   g: channel(g),
   b: channel(b),
@@ -122,14 +122,14 @@ export const rgba = (r: number, g: number, b: number, a: number): Rgba => ({
  * @since 0.1.5
  * @category constructors
  */
-export const rgb = (r: number, g: number, b: number): Rgba => rgba(r, g, b, 1.0)
+export const rgb = (r: number, g: number, b: number): RGBA => rgba(r, g, b, 1.0)
 
 /**
  * @since 0.1.5
  * @category constructors
  * @internal
  */
-const normalized = (
+export const normalized = (
   r: number,
   g: number,
   b: number,
@@ -146,7 +146,7 @@ const normalized = (
  * @category constructors
  * @internal
  */
-export const normalize = (c: Rgba): Normalized =>
+export const normalize = (c: RGBA): Normalized =>
   normalized(c.r / 255, c.g / 255, c.b / 255, c.a)
 
 /**
@@ -154,8 +154,8 @@ export const normalize = (c: Rgba): Normalized =>
  * @category constructors
  * @internal
  */
-export const normalizedFromHsla: (c: Hsla) => Normalized = ({ h, s, l, a }) => {
-  const ch = clipHue(h) / 60.0
+export const normalizedFromHSLA: (c: HSLA) => Normalized = ({ h, s, l, a }) => {
+  const ch = h / 60.0
   const chr = (1.0 - Math.abs(2.0 * l - 1.0)) * s
   const m = l - chr / 2.0
   const x = chr * (1.0 - Math.abs((ch % 2.0) - 1.0))
@@ -194,7 +194,7 @@ export const normalizedFromHsla: (c: Hsla) => Normalized = ({ h, s, l, a }) => {
  * @category constructors
  * @internal
  */
-const fromNormalized: (c: Normalized) => Rgba = (c) =>
+export const fromNormalized: (c: Normalized) => RGBA = (c) =>
   rgba(
     denormalizeChannel(c.r),
     denormalizeChannel(c.g),
@@ -206,14 +206,14 @@ const fromNormalized: (c: Normalized) => Rgba = (c) =>
  * @since 0.1.5
  * @category constructors
  */
-export const fromHSLA: (c: Hsla) => Rgba = (c) =>
-  pipe(normalizedFromHsla(c), fromNormalized)
+export const fromHSLA: (c: HSLA) => RGBA = (c) =>
+  pipe(normalizedFromHSLA(c), fromNormalized)
 
 /**
  * @category constructors
  * @since 0.1.5
  */
-export const fromXYZ = ({ x, y, z }: XYZ): Rgba => {
+export const fromXYZ = ({ x, y, z }: XYZ): RGBA => {
   const f = (c: number) =>
     c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1.0 / 2.4) - 0.055
 
@@ -227,42 +227,39 @@ export const fromXYZ = ({ x, y, z }: XYZ): Rgba => {
 /**
  * @since 0.1.5
  */
-export const maxChroma: (c: Rgba) => number = ({ r, g, b }) =>
+export const maxChroma: (c: RGBA) => number = ({ r, g, b }) =>
   Math.max(Math.max(r, g), b)
 
 /**
  * @since 0.1.5
  */
-export const minChroma: (c: Rgba) => number = ({ r, g, b }) =>
+export const minChroma: (c: RGBA) => number = ({ r, g, b }) =>
   Math.min(Math.min(r, g), b)
 
 /**
  * @since 0.1.5
  */
-export const chroma: (c: Rgba) => number = (c) => maxChroma(c) - minChroma(c)
+export const chroma: (c: RGBA) => number = (c) => maxChroma(c) - minChroma(c)
 
 /**
  * The percieved brightness of the color (A number between 0.0 and 1.0).
- * See: https://www.w3.org/TR/AERT#color-contrast
+ * See: [https://www.w3.org/TR/AERT#color-contrast](https://www.w3.org/TR/AERT#color-contrast)
  *
  * @since 0.1.5
  */
-export const brightness = (c: Rgba): number => {
-  console.log('c', c)
-
-  return (299.0 * c.r + 587.0 * c.g + 114.0 * c.b) / 1000.0 / 255
-}
+export const brightness = (c: Normalized): number =>
+  (299.0 * c.r + 587.0 * c.g + 114.0 * c.b) / 1000.0
 
 /**
  * The relative brightness of a color (normalized to 0.0 for darkest black
  * and 1.0 for lightest white), according to the WCAG definition.
  *
- * See: https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
+ * See: [https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef](https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef)
  *
  * @since 0.1.5
  */
-export const luminance: (color: Rgba) => number = (c): number => {
-  const rgba = normalize(c)
+export const luminance: (color: Normalized) => number = (rgba): number => {
+  // const rgba = normalize(c)
   const f = (c: number) => {
     if (c <= 0.03928) {
       return c / 12.92
@@ -281,9 +278,9 @@ export const luminance: (color: Rgba) => number = (c): number => {
 /**
  * @since 0.1.5
  */
-export const evolve: <F extends { [K in keyof Rgba]: (a: Rgba[K]) => number }>(
+export const evolve: <F extends { [K in keyof RGBA]: (a: RGBA[K]) => number }>(
   transformations: F
-) => (c: Rgba) => Rgba = (t) => (c) =>
+) => (c: RGBA) => RGBA = (t) => (c) =>
   pipe(c, struct.evolve(t), ({ r, g, b, a }) => rgba(r, g, b, a))
 
 /**
@@ -291,8 +288,8 @@ export const evolve: <F extends { [K in keyof Rgba]: (a: Rgba[K]) => number }>(
  */
 export const mix =
   (ratio: number) =>
-  (a: Rgba) =>
-  (b: Rgba): Rgba => {
+  (a: RGBA) =>
+  (b: RGBA): RGBA => {
     const i = interpolate(ratio)
 
     return pipe(
@@ -312,7 +309,7 @@ export const mix =
  * @since 0.1.5
  * @category destructors
  */
-export const toCSS = (c: Rgba): string =>
+export const toCSS = (c: RGBA): string =>
   c.a === 1.0
     ? `rgb(${c.r}, ${c.g}, ${c.b})`
     : `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})`
@@ -321,7 +318,7 @@ export const toCSS = (c: Rgba): string =>
  * @category instances
  * @since 0.1.5
  */
-export const Eq: Equals.Eq<Rgba> = Equals.struct({
+export const Eq: Equals.Eq<RGBA> = Equals.struct({
   r: number.Eq,
   g: number.Eq,
   b: number.Eq,
@@ -332,7 +329,7 @@ export const Eq: Equals.Eq<Rgba> = Equals.struct({
  * @category instances
  * @since 0.1.5
  */
-export const Show: Sh.Show<Rgba> = Sh.struct({
+export const Show: Sh.Show<RGBA> = Sh.struct({
   r: number.Show,
   g: number.Show,
   b: number.Show,

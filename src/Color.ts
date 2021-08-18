@@ -10,20 +10,20 @@ import { sequenceT } from 'fp-ts/Apply'
 import { absurd, flow, pipe } from 'fp-ts/function'
 import { Endomorphism } from 'fp-ts/Endomorphism'
 
-import * as Hsla from './Hsla'
-import * as Hsva from './Hsva'
-import * as Rgba from './Rgba'
+import * as HSLA from './HSLA'
+import * as HSVA from './HSVA'
+import * as RGBA from './RGBA'
 import * as XYZ from './XYZ'
 import * as Lab from './Lab'
 import * as LCh from './LCh'
 import * as Int from './Int'
-import { square } from './Math'
+import { square } from './math'
 
 /**
  * @category model
  * @since 0.1.0
  */
-export type ColorSpace = 'rgb' | 'hsl' | 'LCh' | 'Lab'
+export type ColorSpace = 'RGB' | 'HSL' | 'LCh' | 'Lab'
 
 /**
  *  Colors are represented by their HSL values (hue, saturation, lightness) internally,
@@ -32,7 +32,7 @@ export type ColorSpace = 'rgb' | 'hsl' | 'LCh' | 'Lab'
  * @category model
  * @since 0.1.0
  */
-export type Color = Hsla.Hsla
+export type Color = HSLA.HSLA
 
 /**
  * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
@@ -43,7 +43,7 @@ export type Color = Hsla.Hsla
  * @since 0.1.0
  */
 export const hsla: (h: number, s: number, l: number, a: number) => Color =
-  Hsla.hsla
+  HSLA.hsla
 
 /**
  * Create a `Color` from Hue, Saturation, Lightness and Alpha values. The
@@ -66,8 +66,8 @@ export const hsl = (h: number, s: number, l: number): Color => hsla(h, s, l, 1)
  * @since 0.1.0
  */
 export const rgba: (r: number, g: number, b: number, a: number) => Color = flow(
-  Rgba.rgba,
-  Hsla.fromRgba
+  RGBA.rgba,
+  HSLA.fromRGBA
 )
 
 /**
@@ -86,9 +86,9 @@ export const rgb = (r: number, g: number, b: number): Color => rgba(r, g, b, 1)
  */
 export const rgba2 = (r: number, g: number, b: number, a: number): Color =>
   rgba(
-    Rgba.denormalizeChannel(r),
-    Rgba.denormalizeChannel(g),
-    Rgba.denormalizeChannel(b),
+    RGBA.denormalizeChannel(r),
+    RGBA.denormalizeChannel(g),
+    RGBA.denormalizeChannel(b),
     a
   )
 
@@ -110,8 +110,8 @@ export const rgb2 = (r: number, g: number, b: number): Color =>
  * @since 0.1.0
  */
 export const hsva: (h: number, s: number, v: number, a: number) => Color = flow(
-  Hsva.hsva,
-  Hsla.fromHsva
+  HSVA.hsva,
+  HSLA.fromHSVA
 )
 
 /**
@@ -140,7 +140,7 @@ export const hsv = (h: number, s: number, v: number): Color => hsva(h, s, v, 1)
  */
 export const xyz: (x: number, y: number, z: number) => Color = flow(
   XYZ.xyz,
-  Hsla.fromXYZ
+  HSLA.fromXYZ
 )
 
 /**
@@ -154,7 +154,7 @@ export const xyz: (x: number, y: number, z: number) => Color = flow(
  */
 export const lab: (l: number, a: number, b: number) => Color = flow(
   Lab.lab,
-  Hsla.fromLab
+  HSLA.fromLab
 )
 
 /**
@@ -169,7 +169,7 @@ export const lab: (l: number, a: number, b: number) => Color = flow(
  */
 export const lch: (l: number, c: number, h: number) => Color = flow(
   LCh.lch,
-  Hsla.fromLCh
+  HSLA.fromLCh
 )
 
 const strMatch = (pattern: RegExp) => (str: string) =>
@@ -280,7 +280,7 @@ export const hue: (c: Color) => number = ({ h }) => h
  * @since 0.1.0
  * @category destructors
  */
-export const toRGBA: (c: Color) => Rgba.Rgba = Rgba.fromHSLA
+export const toRGBA: (c: Color) => RGBA.RGBA = RGBA.fromHSLA
 
 /**
  * Convert a `Color` to its Hue, Saturation, Lightness and Alpha values. See
@@ -289,7 +289,7 @@ export const toRGBA: (c: Color) => Rgba.Rgba = Rgba.fromHSLA
  * @since 0.1.0
  * @category destructors
  */
-export const toHSLA: (c: Color) => Hsla.Hsla = (c) => c
+export const toHSLA: (c: Color) => HSLA.HSLA = (c) => c
 
 /**
  * Convert a `Color` to its Hue, Saturation, Value and Alpha values. See
@@ -298,7 +298,7 @@ export const toHSLA: (c: Color) => Hsla.Hsla = (c) => c
  * @since 0.1.0
  * @category destructors
  */
-export const toHSVA: (c: Color) => Hsva.Hsva = Hsva.fromHsla
+export const toHSVA: (c: Color) => HSVA.HSVA = HSVA.fromHSLA
 
 /**
  * Get XYZ coordinates according to the CIE 1931 color space.
@@ -310,7 +310,7 @@ export const toHSVA: (c: Color) => Hsva.Hsva = Hsva.fromHsla
  * @since 0.1.0
  * @category destructors
  */
-export const toXYZ: (c: Color) => XYZ.XYZ = XYZ.fromHsla
+export const toXYZ: (c: Color) => XYZ.XYZ = XYZ.fromHSLA
 
 /**
  * Get L, a and b coordinates according to the Lab color space.
@@ -320,7 +320,7 @@ export const toXYZ: (c: Color) => XYZ.XYZ = XYZ.fromHsla
  * @since 0.1.0
  * @category destructors
  */
-export const toLab: (c: Color) => Lab.Lab = Lab.fromHsla
+export const toLab: (c: Color) => Lab.Lab = Lab.fromHSLA
 
 /**
  * Get L, C and h coordinates according to the CIE LCh color space.
@@ -329,7 +329,7 @@ export const toLab: (c: Color) => Lab.Lab = Lab.fromHsla
  * @since 0.1.0
  * @category destructors
  */
-export const toLCh: (c: Color) => LCh.LCh = LCh.fromHsla
+export const toLCh: (c: Color) => LCh.LCh = LCh.fromHSLA
 
 const hexToString = Int.toStringAs(Int.hexadecimal)
 
@@ -360,14 +360,14 @@ export const toHexString: (c: Color) => string = (color) => {
  */
 export const toCSS: (s: ColorSpace) => (c: Color) => string = (s) => (c) => {
   switch (s) {
-    case 'hsl': {
-      return Hsla.toCSS(c)
+    case 'HSL': {
+      return HSLA.toCSS(c)
     }
 
     case 'Lab':
     case 'LCh':
-    case 'rgb': {
-      return pipe(Rgba.fromHSLA(c), Rgba.toCSS)
+    case 'RGB': {
+      return pipe(RGBA.fromHSLA(c), RGBA.toCSS)
     }
 
     default: {
@@ -382,16 +382,16 @@ export const toCSS: (s: ColorSpace) => (c: Color) => string = (s) => (c) => {
  * @since 0.1.5
  * @category destructors
  */
-export const toCSSHsla: (c: Color) => string = toCSS('hsl')
+export const toHSLAString: (c: Color) => string = toCSS('HSL')
 
 /**
- * Use [toCSSHsla](#toCSSHsla) instead
+ * Use [toHSLAString](#toHSLAString) instead
  *
  * @since 0.1.0
  * @category destructors
  * @deprecated
  */
-export const cssStringHSLA: (c: Color) => string = toCSSHsla
+export const cssStringHSLA: (c: Color) => string = toHSLAString
 
 /**
  * A CSS representation of the color in the form `rgb(..)` or `rgba(...)`
@@ -399,23 +399,23 @@ export const cssStringHSLA: (c: Color) => string = toCSSHsla
  * @since 0.1.5
  * @category destructors
  */
-export const toCSSRgba = toCSS('rgb')
+export const toRGBAString = toCSS('RGB')
 
 /**
- * Use [toCSSRgba](#toCSSRgba) instead
+ * Use [toRGBAString](#toRGBAString) instead
  *
  * @since 0.1.0
  * @category destructors
  * @deprecated
  */
-export const cssStringRGBA: (c: Color) => string = toCSSRgba
+export const cssStringRGBA: (c: Color) => string = toRGBAString
 
 /**
  * Rotate the hue of a `Color` by a certain angle (in degrees).
  *
  * @since 0.1.0
  */
-export const rotateHue: (angle: number) => (c: Color) => Color = Hsla.rotateHue
+export const rotateHue: (angle: number) => (c: Color) => Color = HSLA.rotateHue
 
 /**
  * Get the complementary color (hue rotated by 180°).
@@ -491,29 +491,29 @@ export type Interpolator = (a: Color) => (b: Color) => (ratio: number) => Color
 export const mix: (space: ColorSpace) => Interpolator =
   (space: ColorSpace) => (a) => (b) => (r) => {
     switch (space) {
-      case 'hsl': {
-        return Hsla.mix(r)(a)(b)
+      case 'HSL': {
+        return HSLA.mix(r)(a)(b)
       }
 
-      case 'rgb': {
+      case 'RGB': {
         const f = toRGBA(a)
         const t = toRGBA(b)
 
-        return pipe(Rgba.mix(r)(f)(t), Hsla.fromRgba)
+        return pipe(RGBA.mix(r)(f)(t), HSLA.fromRGBA)
       }
 
       case 'LCh': {
         const f = toLCh(a)
         const t = toLCh(b)
 
-        return pipe(LCh.mix(r)(f)(t), Hsla.fromLCh)
+        return pipe(LCh.mix(r)(f)(t), HSLA.fromLCh)
       }
 
       case 'Lab': {
         const f = toLab(a)
         const t = toLab(b)
 
-        return pipe(Lab.mix(r)(f)(t), Hsla.fromLab)
+        return pipe(Lab.mix(r)(f)(t), HSLA.fromLab)
       }
     }
   }
@@ -524,14 +524,14 @@ export const mix: (space: ColorSpace) => Interpolator =
  *
  * @since 0.1.0
  */
-export const mixHSL: Interpolator = mix('hsl')
+export const mixHSL: Interpolator = mix('HSL')
 
 /**
  * Mix two colors by linearly interpolating between them in the RGB color space.
  *
  * @since 0.1.0
  */
-export const mixRGB: Interpolator = mix('rgb')
+export const mixRGB: Interpolator = mix('RGB')
 
 /**
  * Mix two colors by linearly interpolating between them in the LCh color space.
@@ -554,8 +554,8 @@ export const mixLab: Interpolator = mix('Lab')
  * @since 0.1.0
  */
 export const brightness: (c: Color) => number = flow(
-  Rgba.fromHSLA,
-  Rgba.brightness
+  RGBA.normalizedFromHSLA,
+  RGBA.brightness
 )
 
 /**
@@ -567,8 +567,8 @@ export const brightness: (c: Color) => number = flow(
  * @since 0.1.0
  */
 export const luminance: (color: Color) => number = flow(
-  Rgba.fromHSLA,
-  Rgba.luminance
+  RGBA.normalizedFromHSLA,
+  RGBA.luminance
 )
 
 /**
@@ -646,7 +646,7 @@ export const distance =
  *   HSL has many different representations of black (arbitrary hue and
  *   saturation values).
  */
-export const Eq: Equals.Eq<Color> = Equals.contramap(toRGBA)(Rgba.Eq)
+export const Eq: Equals.Eq<Color> = Equals.contramap(toRGBA)(RGBA.Eq)
 
 /**
  * @category instances
@@ -667,5 +667,5 @@ export const OrdBrightness: Ord.Ord<Color> = Ord.contramap(brightness)(
  * @since 0.1.0
  */
 export const Show: Sh.Show<Color> = {
-  show: (c: Color) => pipe(toRGBA(c), Rgba.Show.show)
+  show: (c: Color) => pipe(toRGBA(c), RGBA.Show.show)
 }

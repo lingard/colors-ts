@@ -4,8 +4,8 @@
 import { pipe } from 'fp-ts/function'
 import { Ord } from 'fp-ts/number'
 import { between } from 'fp-ts/Ord'
-import { mod } from './Math'
-import * as Rgba from './Rgba'
+import { mod } from './math'
+import * as RGBA from './RGBA'
 
 interface HueBrand {
   readonly Hue: unique symbol
@@ -37,9 +37,9 @@ export const clipHue: (n: number) => Hue = (hue) =>
  * @category constructors
  * @since 0.1.5
  */
-export const fromRGBA = (rgba: Rgba.Rgba): Hue => {
-  const chroma = Rgba.chroma(rgba)
-  const maxChroma = Rgba.maxChroma(rgba)
+export const fromRGBA = (rgba: RGBA.RGBA): Hue => {
+  const chroma = RGBA.chroma(rgba)
+  const maxChroma = RGBA.maxChroma(rgba)
 
   const r = rgba.r / 255
   const g = rgba.g / 255

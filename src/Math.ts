@@ -12,15 +12,6 @@ export const mod =
 
 export const square = (x: number): number => Math.pow(x, 2.0)
 
-/**
- * Linearly interpolate between two values.
- */
-export const interpolate =
-  (fraction: number) =>
-  (a: number) =>
-  (b: number): number =>
-    a + fraction * (b - a)
-
 export type Path = {
   readonly from: number
   readonly to: number
@@ -38,6 +29,15 @@ export const ordPath: Ord.Ord<Path> = Ord.fromCompare((a, b) => {
 
   return da > db ? 1 : -1
 })
+
+/**
+ * Linearly interpolate between two values.
+ */
+export const interpolate =
+  (fraction: number) =>
+  (a: number) =>
+  (b: number): number =>
+    a + fraction * (b - a)
 
 /**
  * Linearly interpolate between two angles. Always take the shortest path

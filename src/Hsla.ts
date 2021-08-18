@@ -4,12 +4,12 @@
 import { flow, pipe } from 'fp-ts/function'
 import * as struct from 'fp-ts/struct'
 import * as Hue from './Hue'
-import { UnitInterval, unitInterval } from './UnitInterval'
-import * as Rgba from './Rgba'
-import { Hsva } from './Hsva'
+import { unitInterval } from './UnitInterval'
+import * as RGBA from './RGBA'
+import { HSVA } from './HSVA'
 import * as XYZ from './XYZ'
 import * as Lab from './Lab'
-import { interpolate, interpolateAngle } from './Math'
+import { interpolate, interpolateAngle } from './math'
 
 /**
  * Represents a color using the HSL cylindrical-coordinate system.
@@ -17,7 +17,7 @@ import { interpolate, interpolateAngle } from './Math'
  * @category model
  * @since 0.1.5
  */
-export interface Hsla {
+export interface HSLA {
   /**
    * A number between `0` and `360` representing the hue of the color in degrees.
    */
@@ -27,26 +27,26 @@ export interface Hsla {
    * A number between `0` and `1` representing the percent saturation of the color
    * where `0` is completely denatured (grayscale) and `1` is fully saturated (full color).
    */
-  readonly s: UnitInterval
+  readonly s: number
 
   /**
    * A number between `0` and `1` representing the percent lightness of the color
    * where `0` is completely dark (black) and `1` is completely light (white).
    */
-  readonly l: UnitInterval
+  readonly l: number
 
   /**
    * A number between `0` and `1` representing the opacity or transparency of the color
    * where `0` is fully transparent and `1` is fully opaque.
    */
-  readonly a: UnitInterval
+  readonly a: number
 }
 
 /**
  * @category constructors
  * @since 0.1.5
  */
-export const hsla = (h: number, s: number, l: number, a: number): Hsla => ({
+export const hsla = (h: number, s: number, l: number, a: number): HSLA => ({
   h: Hue.hue(h),
   s: unitInterval(s),
   l: unitInterval(l),
@@ -57,10 +57,16 @@ export const hsla = (h: number, s: number, l: number, a: number): Hsla => ({
  * @category constructors
  * @since 0.1.5
  */
-export const fromRgba: (rgba: Rgba.Rgba) => Hsla = (rgba) => {
-  const maxChroma = Rgba.maxChroma(rgba)
-  const minChroma = Rgba.minChroma(rgba)
-  const chroma = Rgba.chroma(rgba)
+export const hsl = (h: number, s: number, l: number): HSLA => hsla(h, s, l, 1.0)
+
+/**
+ * @category constructors
+ * @since 0.1.5
+ */
+export const fromRGBA: (rgba: RGBA.RGBA) => HSLA = (rgba) => {
+  const maxChroma = RGBA.maxChroma(rgba)
+  const minChroma = RGBA.minChroma(rgba)
+  const chroma = RGBA.chroma(rgba)
   const hue = Hue.fromRGBA(rgba)
   const lightness = (maxChroma + minChroma) / (255.0 * 2.0)
   const saturation =
@@ -73,7 +79,12 @@ export const fromRgba: (rgba: Rgba.Rgba) => Hsla = (rgba) => {
  * @category constructors
  * @since 0.1.5
  */
-export const fromHsva: (hsva: Hsva) => Hsla = ({ h, s, v, a }) => {
+export const fromHSVA: (hsva: HSVA) => HSLA = ({ h, s, v, a }) => {
+  const { saturation, lightness } = pipe((2.0 - s) * v, (tmp) => ({
+    saturation: (s * v) / (tmp < 1.0 ? tmp : 2.0 - tmp),
+    lightness: tmp / 2.0
+  }))
+
   if (v === 0) {
     return hsla(h, s / (2.0 - s), 0.0, a)
   }
@@ -82,11 +93,6 @@ export const fromHsva: (hsva: Hsva) => Hsla = ({ h, s, v, a }) => {
     return hsla(h, 0.0, 1.0, a)
   }
 
-  const { saturation, lightness } = pipe((2.0 - s) * v, (tmp) => ({
-    saturation: (s * v) / (tmp < 1.0 ? tmp : 2.0 - tmp),
-    lightness: tmp / 2.0
-  }))
-
   return hsla(h, saturation, lightness, a)
 }
 
@@ -94,7 +100,7 @@ export const fromHsva: (hsva: Hsva) => Hsla = ({ h, s, v, a }) => {
  * @category constructors
  * @since 0.1.5
  */
-export const fromXYZ = flow(Rgba.fromXYZ, fromRgba)
+export const fromXYZ = flow(RGBA.fromXYZ, fromRGBA)
 
 /**
  * @category constructors
@@ -113,7 +119,7 @@ export const fromLCh = flow(Lab.fromLCh, fromLab)
  *
  * @since 0.1.5
  */
-export const rotateHue: (angle: number) => (c: Hsla) => Hsla =
+export const rotateHue: (angle: number) => (c: HSLA) => HSLA =
   (angle: number) =>
   ({ h, s, l, a }) =>
     hsla(h + angle, s, l, a)
@@ -121,9 +127,9 @@ export const rotateHue: (angle: number) => (c: Hsla) => Hsla =
 /**
  * @since 0.1.5
  */
-export const evolve: <F extends { [K in keyof Hsla]: (a: Hsla[K]) => number }>(
+export const evolve: <F extends { [K in keyof HSLA]: (a: HSLA[K]) => number }>(
   transformations: F
-) => (c: Hsla) => Hsla = (t) => (c) =>
+) => (c: HSLA) => HSLA = (t) => (c) =>
   pipe(c, struct.evolve(t), ({ h, s, l, a }) => hsla(h, s, l, a))
 
 /**
@@ -131,8 +137,8 @@ export const evolve: <F extends { [K in keyof Hsla]: (a: Hsla[K]) => number }>(
  */
 export const mix =
   (ratio: number) =>
-  (a: Hsla) =>
-  (b: Hsla): Hsla => {
+  (a: HSLA) =>
+  (b: HSLA): HSLA => {
     const i = interpolate(ratio)
     const ia = interpolateAngle(ratio)
 
@@ -153,7 +159,7 @@ export const mix =
  * @since 0.1.5
  * @category destructors
  */
-export const toCSS: (c: Hsla) => string = ({ h, s, l, a }) => {
+export const toCSS: (c: HSLA) => string = ({ h, s, l, a }) => {
   const p = (n: number) =>
     pipe(Math.round(100.0 * (n * 100.0)) / 100.0, (n) => `${n}%`)
   const saturation = p(s)

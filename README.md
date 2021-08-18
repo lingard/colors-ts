@@ -18,7 +18,7 @@ pipe(
   X11.seagreen,
   C.lighten(0.2),
   C.saturate(0.3),
-  C.cssStringHSLA
+  C.toHSLAString
 )
 // => "hsl(146.45, 80.27%, 56.27%)"
 

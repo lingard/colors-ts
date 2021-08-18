@@ -1,17 +1,17 @@
 /**
- * A color in the CIE LCh color space.
+ * CIE LCh, a polar version of [`Lab`](./Lab.ts.html).
  * Note: See documentation for [`xyz`](./XYZ.ts.html). The same restrictions apply here.
  *
- * See: https://en.wikipedia.org/wiki/Lab_color_space
+ * See: [https://en.wikipedia.org/wiki/Lab_color_space](https://en.wikipedia.org/wiki/Lab_color_space)
  *
  * @since 0.1.5
  */
 import { pipe } from 'fp-ts/function'
 import * as struct from 'fp-ts/struct'
-import { Hsla } from './Hsla'
+import { HSLA } from './HSLA'
 import { clipHue, Hue, hue } from './Hue'
 import * as Lab from './Lab'
-import { interpolate, interpolateAngle, rad2deg } from './Math'
+import { interpolate, interpolateAngle, rad2deg } from './math'
 
 /**
  * @category model
@@ -19,12 +19,12 @@ import { interpolate, interpolateAngle, rad2deg } from './Math'
  */
 export interface LCh {
   /**
-   * A number representing the lightness
+   * The lightness of the color, 0.0 gives absolute black and 100.0 gives the brightest white.
    */
   readonly l: number
 
   /**
-   * A number representing the chroma value
+   * Chroma, the colorfulness of the color. It's similar to saturation.
    */
   readonly c: number
 
@@ -48,15 +48,12 @@ export const lch = (l: number, c: number, h: number): LCh => ({
  * @since 0.1.5
  * @category constructors
  */
-export const fromHsla: (c: Hsla) => LCh = (c) => {
-  const rec = Lab.fromHsla(c)
-  const l = rec.l
-  const a = rec.a
-  const b = rec.b
-  const c2 = Math.sqrt(a * a + b * b)
+export const fromHSLA: (c: HSLA) => LCh = (hsla) => {
+  const { l, a, b } = Lab.fromHSLA(hsla)
+  const c = Math.sqrt(a * a + b * b)
   const h = clipHue(Math.atan2(b, a) * rad2deg)
 
-  return lch(l, c2, h)
+  return lch(l, c, h)
 }
 
 /**

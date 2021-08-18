@@ -156,7 +156,7 @@ describe('Color', () => {
   })
 
   test('lab / toLab (Lab -> HSL -> Lab)', () => {
-    const hsvRoundtrip = (h: number, s: number, l: number) => {
+    const labRoundtrip = (h: number, s: number, l: number) => {
       const a = C.hsl(h, s, l)
       const b = C.toLab(a)
 
@@ -165,7 +165,7 @@ describe('Color', () => {
 
     expect(C.lab(53.233, 80.109, 67.22)).toEqualColor(red)
 
-    fc.assert(fc.property(fc.integer(), (h) => hsvRoundtrip(h, 0.2, 0.8)))
+    fc.assert(fc.property(fc.integer(), (h) => labRoundtrip(h, 0.2, 0.8)))
   })
 
   test('lch / toLCh (LCh -> HSL -> LCh)', () => {
@@ -203,23 +203,29 @@ describe('Color', () => {
     hexRoundtrip(162.4, 0.779, 0.447)
   })
 
+  test('toHSLA', () => {
+    expect(C.toHSLA(C.black)).toEqual(C.black)
+  })
+
   test('toCSS', () => {
-    expect(C.toCSS('hsl')(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
+    expect(C.toCSS('HSL')(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
       'hsla(120.1, 33%, 55%, 0.3)'
     )
-    expect(C.toCSS('rgb')(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
+    expect(C.toCSS('RGB')(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
+    expect(C.toCSS('Lab')(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
+    expect(C.toCSS('LCh')(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
     // @ts-expect-error - valid blend mode required
     expect(() => C.toCSS('foo')(C.black)).toThrowError()
   })
 
-  test('toCSSHsla', () => {
-    expect(C.toCSSHsla(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
+  test('toHSLAString', () => {
+    expect(C.toHSLAString(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
       'hsla(120.1, 33%, 55%, 0.3)'
     )
-    expect(C.toCSSHsla(C.hsla(120.1, 0.332, 0.549, 1.0))).toEqual(
+    expect(C.toHSLAString(C.hsla(120.1, 0.332, 0.549, 1.0))).toEqual(
       'hsl(120.1, 33.2%, 54.9%)'
     )
-    expect(C.toCSSHsla(C.hsla(360.0, 0.332, 0.549, 1.0))).toEqual(
+    expect(C.toHSLAString(C.hsla(360.0, 0.332, 0.549, 1.0))).toEqual(
       'hsl(360, 33.2%, 54.9%)'
     )
 
@@ -228,19 +234,19 @@ describe('Color', () => {
 
     fc.assert(
       fc.property(fc.float(0, 720), fc.float(0, 2), fc.float(0, 1), (h, s, l) =>
-        expect(C.toCSSHsla(C.hsla(h, s, l, 1))).toEqual(
+        expect(C.toHSLAString(C.hsla(h, s, l, 1))).toEqual(
           `hsl(${hue(h)}, ${p(s)}%, ${p(l)}%)`
         )
       )
     )
   })
 
-  test('toCSSRgba', () => {
-    expect(C.toCSSRgba(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
-    expect(C.toCSSRgba(C.rgba(42, 103, 255, 0.3))).toEqual(
+  test('toRGBAString', () => {
+    expect(C.toRGBAString(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
+    expect(C.toRGBAString(C.rgba(42, 103, 255, 0.3))).toEqual(
       'rgba(42, 103, 255, 0.3)'
     )
-    expect(C.toCSSRgba(C.rgba(42, 103, 255, 1))).toEqual('rgb(42, 103, 255)')
+    expect(C.toRGBAString(C.rgba(42, 103, 255, 1))).toEqual('rgb(42, 103, 255)')
   })
 
   test('graytone', () => {
@@ -273,19 +279,11 @@ describe('Color', () => {
         Math.round(100 * C.luminance(c))
       )
     })
-
-    fc.assert(
-      fc.property(ColorArbitrary, (c) =>
-        expect(Math.round(100 * C.luminance(C.toGray(c)))).toEqual(
-          Math.round(100 * C.luminance(c))
-        )
-      )
-    )
   })
 
   test('mix', () => {
-    expect(C.mix('rgb')(red)(blue)(0.5)).toEqualColor(C.fromInt(0x800080))
-    expect(C.mix('hsl')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xff00ff))
+    expect(C.mix('RGB')(red)(blue)(0.5)).toEqualColor(C.fromInt(0x800080))
+    expect(C.mix('HSL')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xff00ff))
     expect(C.mix('LCh')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xfb0080))
     expect(C.mix('Lab')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xca0088))
   })

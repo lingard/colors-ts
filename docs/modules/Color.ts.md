@@ -29,18 +29,20 @@ Added in v0.1.0
   - [rgba2](#rgba2)
   - [white](#white)
   - [xyz](#xyz)
-- [deconstructors](#deconstructors)
-  - [cssStringHSLA](#cssstringhsla)
-  - [cssStringRGBA](#cssstringrgba)
+- [destructors](#destructors)
   - [hue](#hue)
+  - [toCSS](#tocss)
   - [toHSLA](#tohsla)
+  - [toHSLAString](#tohslastring)
   - [toHSVA](#tohsva)
   - [toHexString](#tohexstring)
   - [toLCh](#tolch)
   - [toLab](#tolab)
   - [toRGBA](#torgba)
-  - [toRGBA2](#torgba2)
+  - [toRGBAString](#torgbastring)
   - [toXYZ](#toxyz)
+  - [~~cssStringHSLA~~](#cssstringhsla)
+  - [~~cssStringRGBA~~](#cssstringrgba)
 - [instances](#instances)
   - [Eq](#eq)
   - [OrdBrightness](#ordbrightness)
@@ -82,7 +84,7 @@ Pure black.
 **Signature**
 
 ```ts
-export declare const black: Color
+export declare const black: HSLA.HSLA
 ```
 
 Added in v0.1.0
@@ -194,8 +196,7 @@ Added in v0.1.0
 
 ## lab
 
-Create a `Color` from L, a and b coordinates coordinates in the Lab color
-space.
+Create a `Color` from L, a and b coordinates in the Lab color space.
 Note: See documentation for `xyz`. The same restrictions apply here.
 
 See: https://en.wikipedia.org/wiki/Lab_color_space
@@ -259,7 +260,7 @@ https://en.wikipedia.org/wiki/HSL_and_HSV
 **Signature**
 
 ```ts
-export declare const rgba: (r: number, g: number, b: number, alpha: number) => Color
+export declare const rgba: (r: number, g: number, b: number, a: number) => Color
 ```
 
 Added in v0.1.0
@@ -283,7 +284,7 @@ Pure white.
 **Signature**
 
 ```ts
-export declare const white: Color
+export declare const white: HSLA.HSLA
 ```
 
 Added in v0.1.0
@@ -309,31 +310,7 @@ export declare const xyz: (x: number, y: number, z: number) => Color
 
 Added in v0.1.0
 
-# deconstructors
-
-## cssStringHSLA
-
-A CSS representation of the color in the form `hsl(..)` or `hsla(...)`.
-
-**Signature**
-
-```ts
-export declare const cssStringHSLA: (c: Color) => string
-```
-
-Added in v0.1.0
-
-## cssStringRGBA
-
-A CSS representation of the color in the form `rgb(..)` or `rgba(...)`
-
-**Signature**
-
-```ts
-export declare const cssStringRGBA: (c: Color) => string
-```
-
-Added in v0.1.0
+# destructors
 
 ## hue
 
@@ -347,6 +324,18 @@ export declare const hue: (c: Color) => number
 
 Added in v0.1.4
 
+## toCSS
+
+A CSS representation of the color
+
+**Signature**
+
+```ts
+export declare const toCSS: (s: ColorSpace) => (c: Color) => string
+```
+
+Added in v0.1.5
+
 ## toHSLA
 
 Convert a `Color` to its Hue, Saturation, Lightness and Alpha values. See
@@ -355,10 +344,22 @@ Convert a `Color` to its Hue, Saturation, Lightness and Alpha values. See
 **Signature**
 
 ```ts
-export declare const toHSLA: (c: Color) => { h: number; s: number; l: number; a: number }
+export declare const toHSLA: (c: Color) => HSLA.HSLA
 ```
 
 Added in v0.1.0
+
+## toHSLAString
+
+A CSS representation of the color in the form `hsl(..)` or `hsla(...)`.
+
+**Signature**
+
+```ts
+export declare const toHSLAString: (c: Color) => string
+```
+
+Added in v0.1.5
 
 ## toHSVA
 
@@ -368,7 +369,7 @@ Convert a `Color` to its Hue, Saturation, Value and Alpha values. See
 **Signature**
 
 ```ts
-export declare const toHSVA: (c: Color) => { h: number; s: number; v: number; a: number }
+export declare const toHSVA: (c: Color) => HSVA.HSVA
 ```
 
 Added in v0.1.0
@@ -391,7 +392,7 @@ See: https://en.wikipedia.org/wiki/Lab_color_space
 **Signature**
 
 ```ts
-export declare const toLCh: (c: Color) => { l: number; c: number; h: number }
+export declare const toLCh: (c: Color) => LCh.LCh
 ```
 
 Added in v0.1.0
@@ -405,7 +406,7 @@ See: https://en.wikipedia.org/wiki/Lab_color_space
 **Signature**
 
 ```ts
-export declare const toLab: (c: Color) => { l: number; a: number; b: number }
+export declare const toLab: (c: Color) => Lab.Lab
 ```
 
 Added in v0.1.0
@@ -419,23 +420,22 @@ between 0.0 and 1.0.
 **Signature**
 
 ```ts
-export declare const toRGBA: (c: Color) => { r: number; g: number; b: number; a: number }
+export declare const toRGBA: (c: Color) => RGBA.RGBA
 ```
 
 Added in v0.1.0
 
-## toRGBA2
+## toRGBAString
 
-Convert a `Color` to its red, green, blue and alpha values. All values
-are numbers in the range from 0.0 to 1.0.
+A CSS representation of the color in the form `rgb(..)` or `rgba(...)`
 
 **Signature**
 
 ```ts
-export declare const toRGBA2: (c: Color) => { r: number; g: number; b: number; a: number }
+export declare const toRGBAString: (c: HSLA.HSLA) => string
 ```
 
-Added in v0.1.0
+Added in v0.1.5
 
 ## toXYZ
 
@@ -449,7 +449,31 @@ See:
 **Signature**
 
 ```ts
-export declare const toXYZ: (c: Color) => { x: number; y: number; z: number }
+export declare const toXYZ: (c: Color) => XYZ.XYZ
+```
+
+Added in v0.1.0
+
+## ~~cssStringHSLA~~
+
+Use [toHSLAString](#toHSLAString) instead
+
+**Signature**
+
+```ts
+export declare const cssStringHSLA: (c: Color) => string
+```
+
+Added in v0.1.0
+
+## ~~cssStringRGBA~~
+
+Use [toRGBAString](#toRGBAString) instead
+
+**Signature**
+
+```ts
+export declare const cssStringRGBA: (c: Color) => string
 ```
 
 Added in v0.1.0
@@ -461,7 +485,7 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export declare const Eq: Equals.Eq<Color>
+export declare const Eq: Equals.Eq<HSLA.HSLA>
 ```
 
 Added in v0.1.0
@@ -476,7 +500,7 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export declare const OrdBrightness: Ord.Ord<Color>
+export declare const OrdBrightness: Ord.Ord<HSLA.HSLA>
 ```
 
 Added in v0.1.4
@@ -486,7 +510,7 @@ Added in v0.1.4
 **Signature**
 
 ```ts
-export declare const OrdLuminance: Ord.Ord<Color>
+export declare const OrdLuminance: Ord.Ord<HSLA.HSLA>
 ```
 
 Added in v0.1.0
@@ -496,7 +520,7 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export declare const Show: S.Show<Color>
+export declare const Show: Sh.Show<HSLA.HSLA>
 ```
 
 Added in v0.1.0
@@ -505,15 +529,13 @@ Added in v0.1.0
 
 ## Color (type alias)
 
-Note:
-
-- Colors outside the sRGB gamut which cannot be displayed on a typical
-  computer screen can not be represented by `Color`.
+Colors are represented by their HSL values (hue, saturation, lightness) internally,
+as this provides more flexibility than storing RGB values.
 
 **Signature**
 
 ```ts
-export type Color = readonly [hue: Hue, saturation: number, lightness: number, alpha: number] & ColorBrand
+export type Color = HSLA.HSLA
 ```
 
 Added in v0.1.0
@@ -523,7 +545,7 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export type ColorSpace = 'rgb' | 'hsl' | 'LCh' | 'Lab'
+export type ColorSpace = 'RGB' | 'HSL' | 'LCh' | 'Lab'
 ```
 
 Added in v0.1.0
@@ -539,7 +561,7 @@ mixed color.
 **Signature**
 
 ```ts
-export type Interpolator = (start: Color) => (end: Color) => (ratio: number) => Color
+export type Interpolator = (a: Color) => (b: Color) => (ratio: number) => Color
 ```
 
 Added in v0.1.0
@@ -564,7 +586,7 @@ Get the complementary color (hue rotated by 180°).
 **Signature**
 
 ```ts
-export declare const complementary: (c: Color) => Color
+export declare const complementary: (c: HSLA.HSLA) => HSLA.HSLA
 ```
 
 Added in v0.1.0
@@ -786,12 +808,12 @@ Added in v0.1.0
 
 ## toGray
 
-Convert a color to a gray tone with the same perceived luminance (see `luminance`)
+Convert a color to a gray tone with the same perceived luminance (see [luminance](#luminance))
 
 **Signature**
 
 ```ts
-export declare const toGray: Endomorphism<Color>
+export declare const toGray: Endomorphism<HSLA.HSLA>
 ```
 
 Added in v0.1.0

@@ -105,7 +105,7 @@ export const colorScale = (
  * @category constructors
  * @since 0.1.0
  */
-export const grayscale = colorScale('rgb', C.black, [], C.white)
+export const grayscale = colorScale('RGB', C.black, [], C.white)
 
 /**
  * Extract the ratio out of a ColorStop
@@ -549,7 +549,7 @@ export const spectrum = pipe(
       A.map((i) => colorStop(C.hsl(10.0 * i, 1.0, 0.5), i / 36.0))
     )
   },
-  ({ end, stops }) => colorScale('hsl', end, stops, end)
+  ({ end, stops }) => colorScale('HSL', end, stops, end)
 )
 
 /**
@@ -588,7 +588,7 @@ export const yellowToRed = pipe(
  * @since 0.1.0
  */
 export const hot = colorScale(
-  'rgb',
+  'RGB',
   C.black,
   [colorStop(red, 0.5), colorStop(yellow, 0.75)],
   C.white
@@ -600,7 +600,7 @@ export const hot = colorScale(
  * @since 0.1.0
  */
 export const cool = colorScale(
-  'rgb',
+  'RGB',
   C.hsl(180.0, 1.0, 0.6),
   [],
   C.hsl(300.0, 1.0, 0.5)
@@ -645,14 +645,15 @@ const intercalateAS = intercalate(string.Monoid, RA.Foldable)
 
 const cssColorStopsRGB: (s: ColorStops) => string = ([s, m, e]) => {
   if (RA.isEmpty(m)) {
-    return `${C.toCSSHsla(s)}, ${C.toCSSHsla(e)}`
+    return `${C.toHSLAString(s)}, ${C.toHSLAString(e)}`
   }
 
   const percentage = (r: number) => `${r * 100.0}%`
-  const toString = ([c, r]: ColorStop) => `${C.toCSSHsla(c)} ${percentage(r)}`
+  const toString = ([c, r]: ColorStop) =>
+    `${C.toHSLAString(c)} ${percentage(r)}`
   const stops = pipe(m, RA.map(toString), (stop) => intercalateAS(', ', stop))
 
-  return `${C.toCSSHsla(s)}, ${stops}, ${C.toCSSHsla(e)}`
+  return `${C.toHSLAString(s)}, ${stops}, ${C.toHSLAString(e)}`
 }
 
 /**
@@ -671,7 +672,7 @@ const cssColorStopsRGB: (s: ColorStops) => string = ([s, m, e]) => {
  * @since 0.1.0
  */
 export const cssColorStops: (s: ColorScale) => string = ({ mode, stops }) => {
-  if (mode === 'rgb') {
+  if (mode === 'RGB') {
     return cssColorStopsRGB(stops)
   }
 
