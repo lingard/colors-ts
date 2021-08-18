@@ -18,7 +18,7 @@ pipe(
   X11.seagreen,
   C.lighten(0.2),
   C.saturate(0.3),
-  C.cssStringHSLA
+  C.toHSLAString
 )
 // => "hsl(146.45, 80.27%, 56.27%)"
 
@@ -36,3 +36,7 @@ pipe(
 )
 // => (4) ["#000000", "#0000ff", "#90ee90", "#ffffff"]
 ```
+
+### Notes
+
+- Colors outside the sRGB gamut which cannot be displayed on a typical computer screen can not be represented by `Color`.

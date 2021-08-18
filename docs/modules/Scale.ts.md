@@ -1,6 +1,6 @@
 ---
 title: Scale.ts
-nav_order: 3
+nav_order: 8
 parent: Modules
 ---
 
@@ -17,17 +17,17 @@ Added in v0.1.0
   - [colorStop](#colorstop)
   - [colorStops](#colorstops)
   - [grayscale](#grayscale)
-- [deconstructors](#deconstructors)
+- [destructors](#destructors)
   - [length](#length)
   - [stopColor](#stopcolor)
   - [stopRatio](#stopratio)
+  - [stops](#stops)
   - [toReadonlyArray](#toreadonlyarray)
   - [~~toArray~~](#toarray)
 - [model](#model)
   - [ColorScale (type alias)](#colorscale-type-alias)
   - [ColorStop (type alias)](#colorstop-type-alias)
   - [ColorStops (type alias)](#colorstops-type-alias)
-  - [Ratio (type alias)](#ratio-type-alias)
 - [utils](#utils)
   - [addStop](#addstop)
   - [blueToRed](#bluetored)
@@ -108,7 +108,7 @@ export declare const grayscale: ColorScale
 
 Added in v0.1.0
 
-# deconstructors
+# destructors
 
 ## length
 
@@ -146,6 +146,18 @@ export declare const stopRatio: (s: ColorStop) => Ratio
 
 Added in v0.1.0
 
+## stops
+
+Extract the color out of a ColorStop
+
+**Signature**
+
+```ts
+export declare const stops: (s: ColorScale) => ColorStops
+```
+
+Added in v0.1.6
+
 ## toReadonlyArray
 
 transform a scale to an ReadonlyArray of ColorStops
@@ -160,7 +172,7 @@ Added in v0.1.4
 
 ## ~~toArray~~
 
-transform a scale to an Array of ColorStops
+Use [toReadonlyArray](#toReadonlyArray)
 
 **Signature**
 
@@ -180,7 +192,10 @@ used for interpolation between the stops.
 **Signature**
 
 ```ts
-export type ColorScale = [C.ColorSpace, ColorStops]
+export type ColorScale = {
+  readonly mode: C.ColorSpace
+  readonly stops: ColorStops
+}
 ```
 
 Added in v0.1.0
@@ -206,19 +221,7 @@ and the second `Color` argument defines the right end point (color at ratio 1.0)
 **Signature**
 
 ```ts
-export type ColorStops = readonly [C.Color, ReadonlyArray<ColorStop>, C.Color]
-```
-
-Added in v0.1.0
-
-## Ratio (type alias)
-
-ColorStop ratio
-
-**Signature**
-
-```ts
-export type Ratio = number & RatioBrand
+export type ColorStops = readonly [first: C.Color, middle: ReadonlyArray<ColorStop>, last: C.Color]
 ```
 
 Added in v0.1.0

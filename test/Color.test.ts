@@ -19,6 +19,8 @@ import {
   yellow
 } from '../src/X11'
 import { ColorArbitrary } from './utils'
+import { hue } from '../src/Hue'
+import { unitInterval } from '../src/UnitInterval'
 
 describe('Color', () => {
   test('Eq instance', () => {
@@ -26,6 +28,7 @@ describe('Color', () => {
     expect(C.rgba(1, 2, 3, 0.3)).toEqualColor(C.rgba(1, 2, 3, 0.3))
     expect(C.black).toEqualColor(C.hsl(0, 0, 0))
     expect(C.white).toEqualColor(C.hsl(0, 0, 1))
+    expect(C.rgb2(1, 1, 1)).toEqualColor(C.white)
 
     expect(C.hsl(120.0, 0.3, 0.5)).toNotEqualColor(C.hsl(122.0, 0.3, 0.5))
     expect(C.hsl(120.0, 0.3, 0.5)).toNotEqualColor(C.hsl(120.0, 0.32, 0.5))
@@ -153,7 +156,7 @@ describe('Color', () => {
   })
 
   test('lab / toLab (Lab -> HSL -> Lab)', () => {
-    const hsvRoundtrip = (h: number, s: number, l: number) => {
+    const labRoundtrip = (h: number, s: number, l: number) => {
       const a = C.hsl(h, s, l)
       const b = C.toLab(a)
 
@@ -162,7 +165,7 @@ describe('Color', () => {
 
     expect(C.lab(53.233, 80.109, 67.22)).toEqualColor(red)
 
-    fc.assert(fc.property(fc.integer(), (h) => hsvRoundtrip(h, 0.2, 0.8)))
+    fc.assert(fc.property(fc.integer(), (h) => labRoundtrip(h, 0.2, 0.8)))
   })
 
   test('lch / toLCh (LCh -> HSL -> LCh)', () => {
@@ -200,26 +203,50 @@ describe('Color', () => {
     hexRoundtrip(162.4, 0.779, 0.447)
   })
 
-  test('cssStringHSLA', () => {
-    expect(C.cssStringHSLA(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
+  test('toHSLA', () => {
+    expect(C.toHSLA(C.black)).toEqual(C.black)
+  })
+
+  test('toCSS', () => {
+    expect(C.toCSS('HSL')(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
       'hsla(120.1, 33%, 55%, 0.3)'
     )
-    expect(C.cssStringHSLA(C.hsla(120.1, 0.332, 0.549, 1.0))).toEqual(
+    expect(C.toCSS('RGB')(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
+    expect(C.toCSS('Lab')(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
+    expect(C.toCSS('LCh')(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
+    // @ts-expect-error - valid blend mode required
+    expect(() => C.toCSS('foo')(C.black)).toThrowError()
+  })
+
+  test('toHSLAString', () => {
+    expect(C.toHSLAString(C.hsla(120.1, 0.33, 0.55, 0.3))).toEqual(
+      'hsla(120.1, 33%, 55%, 0.3)'
+    )
+    expect(C.toHSLAString(C.hsla(120.1, 0.332, 0.549, 1.0))).toEqual(
       'hsl(120.1, 33.2%, 54.9%)'
     )
-    expect(C.cssStringHSLA(C.hsla(360.0, 0.332, 0.549, 1.0))).toEqual(
+    expect(C.toHSLAString(C.hsla(360.0, 0.332, 0.549, 1.0))).toEqual(
       'hsl(360, 33.2%, 54.9%)'
+    )
+
+    const p = (n: number) =>
+      pipe(unitInterval(n), (n) => Math.round(100.0 * (n * 100.0)) / 100.0)
+
+    fc.assert(
+      fc.property(fc.float(0, 720), fc.float(0, 2), fc.float(0, 1), (h, s, l) =>
+        expect(C.toHSLAString(C.hsla(h, s, l, 1))).toEqual(
+          `hsl(${hue(h)}, ${p(s)}%, ${p(l)}%)`
+        )
+      )
     )
   })
 
-  test('cssStringRGBA', () => {
-    expect(C.cssStringRGBA(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
-    expect(C.cssStringRGBA(C.rgba(42, 103, 255, 0.3))).toEqual(
+  test('toRGBAString', () => {
+    expect(C.toRGBAString(C.rgb(42, 103, 255))).toEqual('rgb(42, 103, 255)')
+    expect(C.toRGBAString(C.rgba(42, 103, 255, 0.3))).toEqual(
       'rgba(42, 103, 255, 0.3)'
     )
-    expect(C.cssStringRGBA(C.rgba(42, 103, 255, 1))).toEqual(
-      'rgb(42, 103, 255)'
-    )
+    expect(C.toRGBAString(C.rgba(42, 103, 255, 1))).toEqual('rgb(42, 103, 255)')
   })
 
   test('graytone', () => {
@@ -255,8 +282,8 @@ describe('Color', () => {
   })
 
   test('mix', () => {
-    expect(C.mix('rgb')(red)(blue)(0.5)).toEqualColor(C.fromInt(0x800080))
-    expect(C.mix('hsl')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xff00ff))
+    expect(C.mix('RGB')(red)(blue)(0.5)).toEqualColor(C.fromInt(0x800080))
+    expect(C.mix('HSL')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xff00ff))
     expect(C.mix('LCh')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xfb0080))
     expect(C.mix('Lab')(red)(blue)(0.5)).toEqualColor(C.fromInt(0xca0088))
   })
@@ -328,7 +355,9 @@ describe('Color', () => {
   })
 
   test('Show', () => {
-    expect(C.Show.show(C.rgba(0, 0, 0, 1))).toEqual('0, 0, 0, 1')
+    expect(C.Show.show(C.rgba(0, 0, 0, 1))).toEqual(
+      '{ r: 0, g: 0, b: 0, a: 1 }'
+    )
   })
 })
 

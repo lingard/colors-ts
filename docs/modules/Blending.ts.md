@@ -55,7 +55,7 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export declare const multiply: (a: Color) => (b: Color) => Color
+export declare const multiply: (a: HSLA) => (b: HSLA) => HSLA
 ```
 
 Added in v0.1.0
@@ -65,7 +65,7 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export declare const overlay: (a: Color) => (b: Color) => Color
+export declare const overlay: (a: HSLA) => (b: HSLA) => HSLA
 ```
 
 Added in v0.1.0
@@ -75,7 +75,7 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export declare const screen: (a: Color) => (b: Color) => Color
+export declare const screen: (a: HSLA) => (b: HSLA) => HSLA
 ```
 
 Added in v0.1.0

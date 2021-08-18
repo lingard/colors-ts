@@ -1,4 +1,4 @@
-import * as M from '../src/Math'
+import * as M from '../src/math'
 import * as fc from 'fast-check'
 
 describe('Math', () => {

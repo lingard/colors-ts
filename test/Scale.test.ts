@@ -9,7 +9,7 @@ import {
   ColorStopArbitrary
 } from './utils'
 
-const scale = S.colorScale('hsl', red, [[blue, 0.3]], yellow)
+const scale = S.colorScale('HSL', red, [[blue, 0.3]], yellow)
 
 describe('Scale', () => {
   test('stopColor', () => {
@@ -27,7 +27,7 @@ describe('Scale', () => {
   test('addStop', () => {
     const contains =
       (c: C.Color, r: number) =>
-      ([, stops]: S.ColorScale) => {
+      ({ stops }: S.ColorScale) => {
         const [, m] = stops
 
         return m.findIndex(([c2, r2]) => c === c2 && r === r2) !== -1
@@ -43,7 +43,7 @@ describe('Scale', () => {
         fc.float(0.01, 0.99),
         (l, stops, r, c, ratio) =>
           pipe(
-            S.colorScale('rgb', l, stops, r),
+            S.colorScale('RGB', l, stops, r),
             S.addStop(c, ratio),
             contains(c, ratio)
           )
@@ -64,7 +64,7 @@ describe('Scale', () => {
   })
 
   test('mode', () => {
-    expect(S.mode(scale)).toEqual('hsl')
+    expect(S.mode(scale)).toEqual('HSL')
   })
 
   test('length', () => {
@@ -72,7 +72,7 @@ describe('Scale', () => {
   })
 
   test('changeMode', () => {
-    expect(pipe(scale, S.changeMode('rgb'), S.mode)).toEqual('rgb')
+    expect(pipe(scale, S.changeMode('RGB'), S.mode)).toEqual('RGB')
   })
 
   test('toReadonlyArray', () => {
@@ -110,7 +110,7 @@ describe('Scale', () => {
   })
 
   test('simpleSampler', () => {
-    const sample = S.simpleSampler(C.mix('rgb'))(
+    const sample = S.simpleSampler(C.mix('RGB'))(
       S.colorStops(red, [[yellow, 0.5]], blue)
     )
 
@@ -136,7 +136,7 @@ describe('Scale', () => {
   })
 
   test('uniformScale', () => {
-    const uscale = S.uniformScale('hsl')(red, [hotpink, yellow, magenta], blue)
+    const uscale = S.uniformScale('HSL')(red, [hotpink, yellow, magenta], blue)
 
     expect(S.sample(uscale)(0.25)).toEqualColor(hotpink)
     expect(S.sample(uscale)(0.0)).toEqualColor(red)
@@ -166,8 +166,8 @@ describe('Scale', () => {
   })
 
   test('combine', () => {
-    const a = S.colorScale('rgb', red, [[green, 0.5]], blue)
-    const b = S.colorScale('rgb', blue, [[green, 0.5]], red)
+    const a = S.colorScale('RGB', red, [[green, 0.5]], blue)
+    const b = S.colorScale('RGB', blue, [[green, 0.5]], red)
 
     expect(pipe(S.combine(0.5)(a)(b), S.toReadonlyArray)).toEqual([
       [red, 0],
@@ -189,24 +189,24 @@ describe('Scale', () => {
       fc.property(
         ColorScaleArbitrary,
         fc.integer(0, 200),
-        (s, x) => pipe(s, ([, stops]) => stops, min(x), length) >= x
+        (s, x) => pipe(S.stops(s), min(x), length) >= x
       )
     )
   })
 
   test('cssColorStops', () => {
     expect(S.cssColorStops(S.grayscale)).toEqual(
-      `${C.cssStringHSLA(C.black)}, ${C.cssStringHSLA(C.white)}`
+      `${C.toHSLAString(C.black)}, ${C.toHSLAString(C.white)}`
     )
 
-    expect(S.cssColorStops(S.colorScale('rgb', C.black, [], C.white))).toEqual(
-      `${C.cssStringHSLA(C.black)}, ${C.cssStringHSLA(C.white)}`
+    expect(S.cssColorStops(S.colorScale('RGB', C.black, [], C.white))).toEqual(
+      `${C.toHSLAString(C.black)}, ${C.toHSLAString(C.white)}`
     )
 
     expect(
-      S.cssColorStops(S.colorScale('rgb', red, [[blue, 0.5]], green))
+      S.cssColorStops(S.colorScale('RGB', red, [[blue, 0.5]], green))
     ).toEqual(
-      `${C.cssStringHSLA(red)}, ${C.cssStringHSLA(blue)} 50%, ${C.cssStringHSLA(
+      `${C.toHSLAString(red)}, ${C.toHSLAString(blue)} 50%, ${C.toHSLAString(
         green
       )}`
     )
@@ -214,7 +214,7 @@ describe('Scale', () => {
     expect(
       S.cssColorStops(
         S.colorScale(
-          'rgb',
+          'RGB',
           red,
           [
             [blue, 0.25],
@@ -224,12 +224,12 @@ describe('Scale', () => {
         )
       )
     ).toEqual(
-      `${C.cssStringHSLA(red)}, ${C.cssStringHSLA(blue)} 25%, ${C.cssStringHSLA(
+      `${C.toHSLAString(red)}, ${C.toHSLAString(blue)} 25%, ${C.toHSLAString(
         green
-      )} 75%, ${C.cssStringHSLA(green)}`
+      )} 75%, ${C.toHSLAString(green)}`
     )
 
-    expect(S.cssColorStops(S.colorScale('hsl', C.black, [], C.white))).toEqual(
+    expect(S.cssColorStops(S.colorScale('HSL', C.black, [], C.white))).toEqual(
       `hsl(0, 0%, 0%), hsl(0, 0%, 10%) 10%, hsl(0, 0%, 20%) 20%, hsl(0, 0%, 30%) 30%, hsl(0, 0%, 40%) 40%, hsl(0, 0%, 50%) 50%, hsl(0, 0%, 60%) 60%, hsl(0, 0%, 70%) 70%, hsl(0, 0%, 80%) 80%, hsl(0, 0%, 90%) 90%, hsl(0, 0%, 100%)`
     )
   })
