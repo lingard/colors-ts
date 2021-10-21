@@ -548,6 +548,20 @@ export const mixLCh: Interpolator = mix('LCh')
 export const mixLab: Interpolator = mix('Lab')
 
 /**
+ * get the alpha channel of a color
+ *
+ * @since 0.1.7
+ */
+export const alpha: (c: Color) => number = HSLA.alpha
+
+/**
+ * get the alpha channel of a color
+ *
+ * @since 0.1.7
+ */
+export const setAlpha: (alpha: number) => Endomorphism<Color> = HSLA.setAlpha
+
+/**
  * The percieved brightness of the color (A number between 0.0 and 1.0).
  * See: https://www.w3.org/TR/AERT#color-contrast
  *

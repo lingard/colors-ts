@@ -10,6 +10,7 @@ import { HSVA } from './HSVA'
 import * as XYZ from './XYZ'
 import * as Lab from './Lab'
 import { interpolate, interpolateAngle } from './math'
+import { Endomorphism } from 'fp-ts/Endomorphism'
 
 /**
  * Represents a color using the HSL cylindrical-coordinate system.
@@ -123,6 +124,23 @@ export const rotateHue: (angle: number) => (c: HSLA) => HSLA =
   (angle: number) =>
   ({ h, s, l, a }) =>
     hsla(h + angle, s, l, a)
+
+/**
+ * get the alpha channel
+ *
+ * @since 0.1.7
+ */
+export const alpha: (c: HSLA) => number = ({ a }) => a
+
+/**
+ * set the alpha channel
+ *
+ * @since 0.1.7
+ */
+export const setAlpha: (alpha: number) => Endomorphism<HSLA> =
+  (a) =>
+  ({ h, s, l }) =>
+    hsla(h, s, l, a)
 
 /**
  * @since 0.1.5

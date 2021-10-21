@@ -53,6 +53,7 @@ Added in v0.1.0
   - [ColorSpace (type alias)](#colorspace-type-alias)
 - [utils](#utils)
   - [Interpolator (type alias)](#interpolator-type-alias)
+  - [alpha](#alpha)
   - [brightness](#brightness)
   - [complementary](#complementary)
   - [contrast](#contrast)
@@ -70,6 +71,7 @@ Added in v0.1.0
   - [mixRGB](#mixrgb)
   - [rotateHue](#rotatehue)
   - [saturate](#saturate)
+  - [setAlpha](#setalpha)
   - [textColor](#textcolor)
   - [toGray](#togray)
 
@@ -566,6 +568,18 @@ export type Interpolator = (a: Color) => (b: Color) => (ratio: number) => Color
 
 Added in v0.1.0
 
+## alpha
+
+get the alpha channel of a color
+
+**Signature**
+
+```ts
+export declare const alpha: (c: Color) => number
+```
+
+Added in v0.1.7
+
 ## brightness
 
 The percieved brightness of the color (A number between 0.0 and 1.0).
@@ -792,6 +806,18 @@ export declare const saturate: (f: number) => (c: Color) => Color
 ```
 
 Added in v0.1.0
+
+## setAlpha
+
+get the alpha channel of a color
+
+**Signature**
+
+```ts
+export declare const setAlpha: (alpha: number) => Endomorphism<Color>
+```
+
+Added in v0.1.7
 
 ## textColor
 
