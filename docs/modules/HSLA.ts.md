@@ -25,9 +25,11 @@ Added in v0.1.5
 - [model](#model)
   - [HSLA (interface)](#hsla-interface)
 - [utils](#utils)
+  - [alpha](#alpha)
   - [evolve](#evolve)
   - [mix](#mix)
   - [rotateHue](#rotatehue)
+  - [setAlpha](#setalpha)
 
 ---
 
@@ -156,6 +158,18 @@ Added in v0.1.5
 
 # utils
 
+## alpha
+
+get the alpha channel
+
+**Signature**
+
+```ts
+export declare const alpha: (c: HSLA) => number
+```
+
+Added in v0.1.7
+
 ## evolve
 
 **Signature**
@@ -196,3 +210,15 @@ export declare const rotateHue: (angle: number) => (c: HSLA) => HSLA
 ```
 
 Added in v0.1.5
+
+## setAlpha
+
+set the alpha channel
+
+**Signature**
+
+```ts
+export declare const setAlpha: (alpha: number) => Endomorphism<HSLA>
+```
+
+Added in v0.1.7
